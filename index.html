@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="BANZ QUIZ - Platform kuis online">
+  <title>BANZ QUIZ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="loadingScreen" class="screen loading-screen">
+    <div class="loading-card">
+      <div class="logo">BANZ <span>QUIZ</span></div>
+      <video id="introVideo" autoplay muted playsinline>
+        <source src="video/loading.mp4" type="video/mp4">
+      </video>
+      <div class="spinner"></div>
+      <p>Menyiapkan BANZ QUIZ...</p>
+      <button id="skipLoading" class="btn secondary">Lewati</button>
+    </div>
+  </div>
+
+  <main id="app" class="hidden">
+    <section id="homeScreen" class="screen">
+      <div class="hero">
+        <div class="logo large">BANZ <span>QUIZ</span></div>
+        <p class="tagline">Belajar, jawab, dan raih nilai terbaik.</p>
+        <div class="home-actions">
+          <button id="studentBtn" class="btn primary">🎓 Mulai sebagai Siswa</button>
+          <button id="adminBtn" class="btn secondary">🔐 Login Admin</button>
+        </div>
+        <div id="publicStatus" class="status"></div>
+      </div>
+    </section>
+
+    <section id="adminLoginScreen" class="screen hidden">
+      <div class="card auth-card">
+        <button class="back-btn" data-back="homeScreen">← Kembali</button>
+        <h1>Login Admin</h1>
+        <p class="muted">Gunakan email dan password admin Supabase.</p>
+        <form id="adminLoginForm">
+          <label>Email</label>
+          <input id="adminEmail" type="email" placeholder="admin@email.com" required>
+          <label>Password</label>
+          <input id="adminPassword" type="password" placeholder="Password" required>
+          <button class="btn primary full" type="submit">Masuk</button>
+          <p id="loginMessage" class="message"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="adminScreen" class="screen hidden">
+      <div class="dashboard">
+        <header class="topbar">
+          <div>
+            <div class="logo">BANZ <span>QUIZ</span></div>
+            <small id="adminEmailLabel"></small>
+          </div>
+          <button id="logoutBtn" class="btn danger">Keluar</button>
+        </header>
+
+        <div class="stats">
+          <div class="stat"><b id="totalQuestions">0</b><span>Total Soal</span></div>
+          <div class="stat"><b id="totalSubjects">0</b><span>Mata Pelajaran</span></div>
+          <div class="stat"><b id="dbStatus">Offline</b><span>Status Database</span></div>
+        </div>
+
+        <div class="admin-actions">
+          <button id="addQuestionBtn" class="btn primary">＋ Tambah Soal</button>
+          <button id="seedIpsBtn" class="btn secondary">📚 Tambah 15 Soal IPS</button>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <h2>Daftar Soal</h2>
+            <input id="adminSearch" class="search" placeholder="Cari soal...">
+          </div>
+          <div id="adminQuestionList" class="question-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="studentScreen" class="screen hidden">
+      <div class="card student-card">
+        <button class="back-btn" data-back="homeScreen">← Kembali</button>
+        <div class="logo">BANZ <span>QUIZ</span></div>
+        <h1>Pilih Mata Pelajaran</h1>
+        <p class="muted">Soal berasal dari database online.</p>
+        <div id="subjectList" class="subject-grid"></div>
+        <p id="studentMessage" class="message"></p>
+      </div>
+    </section>
+
+    <section id="quizScreen" class="screen hidden">
+      <div class="quiz-wrap">
+        <div class="quiz-top">
+          <button id="quitQuizBtn" class="btn secondary">Keluar</button>
+          <span id="quizProgress">Soal 1</span>
+          <div class="timer">⏱ <span id="timer">30</span>s</div>
+        </div>
+        <div class="card quiz-card">
+          <div class="subject-badge" id="quizSubject"></div>
+          <h2 id="quizQuestion">Memuat...</h2>
+          <div id="answerList" class="answer-list"></div>
+          <button id="nextQuestionBtn" class="btn primary full" disabled>Jawab & Lanjut</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen hidden">
+      <div class="card result-card">
+        <div class="result-icon">🏆</div>
+        <h1>Kuis Selesai!</h1>
+        <p id="resultSubject"></p>
+        <div class="score" id="resultScore">0%</div>
+        <p id="resultDetail"></p>
+        <button id="retryBtn" class="btn primary">Coba Lagi</button>
+        <button id="resultHomeBtn" class="btn secondary">Kembali ke Beranda</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="questionModal" class="modal hidden">
+    <div class="modal-box">
+      <button id="closeModal" class="modal-close">×</button>
+      <h2 id="modalTitle">Tambah Soal</h2>
+      <form id="questionForm">
+        <input id="questionId" type="hidden">
+        <label>Mata Pelajaran</label>
+        <input id="subject" required placeholder="Contoh: IPS">
+        <label>Pertanyaan</label>
+        <textarea id="question" required rows="4" placeholder="Tulis pertanyaan..."></textarea>
+
+        <div class="answer-fields">
+          <div><label>A</label><input id="answerA" required></div>
+          <div><label>B</label><input id="answerB" required></div>
+          <div><label>C</label><input id="answerC" required></div>
+          <div><label>D</label><input id="answerD" required></div>
+        </div>
+
+        <label>Jawaban Benar</label>
+        <select id="correct" required>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+        <p id="formMessage" class="message"></p>
+        <button class="btn primary full" type="submit">Simpan Soal</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
+</body>
+</html>
