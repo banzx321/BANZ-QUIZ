@@ -7,29 +7,264 @@
 
 const DEFAULT_QUESTIONS = [
   {
-    id: Date.now(),
-    subject: "Matematika",
-    question: "Berapakah hasil dari 10 × 5?",
-    answers: {
-      A: "25",
-      B: "50",
-      C: "100",
-      D: "15"
-    },
-    correct: "B"
+  id: Date.now() + 1,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Apa kegiatan utama yang dilakukan oleh bank?",
+  answers: {
+    A: "Menghimpun dan menyalurkan dana masyarakat",
+    B: "Menjual barang kebutuhan sehari-hari",
+    C: "Memproduksi kendaraan",
+    D: "Menyediakan jasa transportasi"
   },
-  {
-    id: Date.now() + 1,
-    subject: "Bahasa Indonesia",
-    question: "Manakah yang merupakan kata baku?",
-    answers: {
-      A: "Resiko",
-      B: "Ijin",
-      C: "Risiko",
-      D: "Nasehat"
-    },
-    correct: "C"
-  }
+  correct: "A"
+},
+
+{
+  id: Date.now() + 2,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Bank berperan sebagai perantara keuangan antara...",
+  answers: {
+    A: "Produsen dan konsumen",
+    B: "Pihak yang memiliki dana dan pihak yang membutuhkan dana",
+    C: "Pemerintah dan pedagang",
+    D: "Penjual dan pembeli barang"
+  },
+  correct: "B"
+},
+
+{
+  id: Date.now() + 3,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Lembaga yang bertugas menjaga kestabilan nilai mata uang dan sistem keuangan adalah...",
+  answers: {
+    A: "Bank Umum",
+    B: "Koperasi",
+    C: "Bank Sentral",
+    D: "Pegadaian"
+  },
+  correct: "C"
+},
+
+{
+  id: Date.now() + 4,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Bank sentral yang ada di Indonesia adalah...",
+  answers: {
+    A: "Bank Mandiri",
+    B: "Bank Rakyat Indonesia",
+    C: "Bank Indonesia",
+    D: "Bank Negara Indonesia"
+  },
+  correct: "C"
+},
+
+{
+  id: Date.now() + 5,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Dana yang dihimpun bank dari masyarakat dalam bentuk tabungan, giro, dan deposito disebut...",
+  answers: {
+    A: "Modal",
+    B: "Simpanan",
+    C: "Kredit",
+    D: "Investasi"
+  },
+  correct: "B"
+},
+
+{
+  id: Date.now() + 6,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Dana yang disimpan oleh masyarakat di bank disebut...",
+  answers: {
+    A: "Kredit",
+    B: "Simpanan",
+    C: "Utang",
+    D: "Dividen"
+  },
+  correct: "B"
+},
+
+{
+  id: Date.now() + 7,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Simpanan yang dapat ditarik menggunakan cek atau bilyet giro disebut...",
+  answers: {
+    A: "Tabungan",
+    B: "Deposito",
+    C: "Giro",
+    D: "Kredit"
+  },
+  correct: "C"
+},
+
+{
+  id: Date.now() + 8,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Simpanan yang penarikannya dilakukan pada waktu tertentu sesuai perjanjian disebut...",
+  answers: {
+    A: "Giro",
+    B: "Deposito",
+    C: "Tabungan",
+    D: "Kredit"
+  },
+  correct: "B"
+},
+
+{
+  id: Date.now() + 9,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Dana yang dipinjamkan oleh bank kepada masyarakat disebut...",
+  answers: {
+    A: "Kredit",
+    B: "Simpanan",
+    C: "Deposito",
+    D: "Modal"
+  },
+  correct: "A"
+},
+
+{
+  id: Date.now() + 10,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Imbalan yang diberikan bank kepada nasabah atas simpanannya disebut...",
+  answers: {
+    A: "Pajak",
+    B: "Bunga",
+    C: "Denda",
+    D: "Dividen"
+  },
+  correct: "B"
+},
+
+{
+  id: Date.now() + 11,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Lembaga yang bertugas menjamin simpanan nasabah bank adalah...",
+  answers: {
+    A: "OJK",
+    B: "Bank Indonesia",
+    C: "LPS",
+    D: "Kementerian Keuangan"
+  },
+  correct: "C"
+},
+
+{
+  id: Date.now() + 12,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "OJK merupakan singkatan dari...",
+  answers: {
+    A: "Otoritas Jasa Keuangan",
+    B: "Organisasi Jasa Keuangan",
+    C: "Otoritas Jaminan Keuangan",
+    D: "Organisasi Jaminan Keuangan"
+  },
+  correct: "A"
+},
+
+{
+  id: Date.now() + 13,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Salah satu tugas OJK adalah...",
+  answers: {
+    A: "Mencetak uang rupiah",
+    B: "Mengatur dan mengawasi sektor jasa keuangan",
+    C: "Menjual saham perusahaan",
+    D: "Memberikan bantuan sosial"
+  },
+  correct: "B"
+},
+
+{
+  id: Date.now() + 14,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Lembaga keuangan yang memberikan pinjaman dengan menggunakan barang sebagai jaminan adalah...",
+  answers: {
+    A: "Pegadaian",
+    B: "Bursa Efek",
+    C: "Bank Indonesia",
+    D: "Perusahaan asuransi"
+  },
+  correct: "A"
+},
+
+{
+  id: Date.now() + 15,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Koperasi simpan pinjam memiliki kegiatan utama berupa...",
+  answers: {
+    A: "Menjual barang elektronik",
+    B: "Menghimpun dan memberikan pinjaman kepada anggota",
+    C: "Mencetak uang",
+    D: "Mengelola pasar modal"
+  },
+  correct: "B"
+},
+
+{
+  id: Date.now() + 16,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Lembaga keuangan yang memberikan perlindungan terhadap risiko tertentu disebut...",
+  answers: {
+    A: "Perusahaan asuransi",
+    B: "Pegadaian",
+    C: "Koperasi",
+    D: "Bursa efek"
+  },
+  correct: "A"
+},
+
+{
+  id: Date.now() + 17,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Berikut yang merupakan contoh lembaga keuangan non-bank adalah...",
+  answers: {
+    A: "Bank Indonesia",
+    B: "Bank Umum",
+    C: "Pegadaian",
+    D: "Bank Perkreditan Rakyat"
+  },
+  correct: "C"
+},
+
+{
+  id: Date.now() + 18,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Pasar modal merupakan tempat bertemunya...",
+  answers: {
+    A: "Penjual dan pembeli kebutuhan pokok",
+    B: "Pihak yang membutuhkan dana dan investor",
+    C: "Petani dan pedagang",
+    D: "Produsen dan distributor"
+  },
+  correct: "B"
+},
+
+{
+  id: Date.now() + 19,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Surat berharga yang menunjukkan kepemilikan seseorang terhadap suatu perusahaan disebut...",
+  answers: {
+    A: "Saham",
+    B: "Cek",
+    C: "Giro",
+    D: "Deposito"
+  },
+  correct: "A"
+},
+
+{
+  id: Date.now() + 20,
+  subject: "Bank dan Lembaga Keuangan",
+  question: "Apa tujuan utama adanya lembaga keuangan?",
+  answers: {
+    A: "Mempermudah kegiatan dan pelayanan keuangan masyarakat",
+    B: "Mengurangi jumlah uang beredar tanpa alasan",
+    C: "Menghapus kegiatan perdagangan",
+    D: "Menggantikan seluruh kegiatan pemerintah"
+  },
+  correct: "A"
+}
 ];
 
 
