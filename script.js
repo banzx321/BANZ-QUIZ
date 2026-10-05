@@ -1,10 +1,18 @@
 // =====================================================
-// BANZ QUIZ - SCRIPT.JS
-// Loading + Firebase + Admin + Quiz + Soal IPS
+// BANZ QUIZ
+// SCRIPT.JS
 // =====================================================
 
-import { initializeApp } from
+
+// =====================================================
+// FIREBASE IMPORT
+// =====================================================
+
+import {
+  initializeApp
+} from
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
 
 import {
   getDatabase,
@@ -21,48 +29,170 @@ import {
 // =====================================================
 // FIREBASE CONFIG
 // =====================================================
+//
+// GANTI ISI BAGIAN INI DENGAN CONFIG FIREBASE ABANG
+//
+// Firebase Console
+// → Project Settings
+// → Your apps
+// → Web App
+// → SDK setup and configuration
+//
+// =====================================================
 
 const firebaseConfig = {
-  apiKey: "MASUKKAN_API_KEY",
-  authDomain: "PROJECT-ID.firebaseapp.com",
-  databaseURL: "https://PROJECT-ID-default-rtdb.firebaseio.com",
-  projectId: "PROJECT-ID",
-  storageBucket: "PROJECT-ID.appspot.com",
-  messagingSenderId: "MESSAGING-SENDER-ID",
-  appId: "APP-ID"
+  apiKey: "AIzaSyXXXXXXXXXXXXXXXX",
+  authDomain: "banz-quiz-xxxxx.firebaseapp.com",
+  databaseURL: "https://banz-quiz-xxxxx-default-rtdb.firebaseio.com",
+  projectId: "banz-quiz-xxxxx",
+  storageBucket: "banz-quiz-xxxxx.firebasestorage.app",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:xxxxxxxxxxxx"
 };
 
 
 // =====================================================
-// FIREBASE INITIALIZE
+// FIREBASE VARIABLE
 // =====================================================
 
-let app = null;
+let firebaseApp = null;
+
 let database = null;
+
 let questionsRef = null;
 
-try {
+let firebaseReady = false;
 
-  app = initializeApp(firebaseConfig);
 
-  database = getDatabase(app);
+// =====================================================
+// CEK CONFIG
+// =====================================================
 
-  questionsRef = ref(database, "questions");
+function configFirebaseValid() {
 
-  console.log("Firebase berhasil diinisialisasi.");
+  if (
+    !firebaseConfig.apiKey ||
+    firebaseConfig.apiKey ===
+      "MASUKKAN_API_KEY"
+  ) {
 
-} catch (error) {
+    return false;
 
-  console.error(
-    "Firebase gagal diinisialisasi:",
-    error
-  );
+  }
+
+
+  if (
+    !firebaseConfig.projectId ||
+    firebaseConfig.projectId ===
+      "PROJECT-ID"
+  ) {
+
+    return false;
+
+  }
+
+
+  if (
+    !firebaseConfig.databaseURL ||
+    firebaseConfig.databaseURL.includes(
+      "PROJECT-ID"
+    )
+  ) {
+
+    return false;
+
+  }
+
+
+  return true;
 
 }
 
 
 // =====================================================
-// VARIABEL
+// INIT FIREBASE
+// =====================================================
+
+function initFirebase() {
+
+  if (
+    !configFirebaseValid()
+  ) {
+
+    console.warn(
+      "Firebase belum dikonfigurasi."
+    );
+
+    setDatabaseStatus(
+      "Firebase belum dikonfigurasi. Website tetap bisa dibuka, tetapi data online belum aktif."
+    );
+
+    return false;
+
+  }
+
+
+  try {
+
+    firebaseApp =
+      initializeApp(
+        firebaseConfig
+      );
+
+
+    database =
+      getDatabase(
+        firebaseApp
+      );
+
+
+    questionsRef =
+      ref(
+        database,
+        "questions"
+      );
+
+
+    firebaseReady = true;
+
+
+    console.log(
+      "Firebase berhasil terhubung."
+    );
+
+
+    setDatabaseStatus(
+      "✓ Firebase terhubung."
+    );
+
+
+    listenQuestions();
+
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "Firebase error:",
+      error
+    );
+
+
+    setDatabaseStatus(
+      "Firebase gagal terhubung. Periksa konfigurasi Firebase."
+    );
+
+
+    return false;
+
+  }
+
+}
+
+
+// =====================================================
+// VARIABEL APLIKASI
 // =====================================================
 
 let questions = [];
@@ -73,154 +203,283 @@ let score = 0;
 
 let selectedSubject = "Semua";
 
+let quizQuestions = [];
+
 let timer = null;
 
 let timeLeft = 30;
+
+let toastTimer = null;
+
+
+// =====================================================
+// ELEMENT HELPER
+// =====================================================
+
+function $(id) {
+
+  return document.getElementById(id);
+
+}
+
+
+// =====================================================
+// TOAST
+// =====================================================
+
+function showToast(message) {
+
+  const toast =
+    $("toast");
+
+
+  if (!toast) {
+
+    return;
+
+  }
+
+
+  toast.textContent =
+    message;
+
+
+  toast.classList.add(
+    "show"
+  );
+
+
+  clearTimeout(
+    toastTimer
+  );
+
+
+  toastTimer =
+    setTimeout(
+      () => {
+
+        toast.classList.remove(
+          "show"
+        );
+
+      },
+      3000
+    );
+
+}
+
+
+// =====================================================
+// DATABASE STATUS
+// =====================================================
+
+function setDatabaseStatus(message) {
+
+  const element =
+    $("databaseStatus");
+
+
+  if (element) {
+
+    element.textContent =
+      message;
+
+  }
+
+}
 
 
 // =====================================================
 // LOADING SCREEN
 // =====================================================
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+function setupLoading() {
 
-    const loadingScreen =
-      document.getElementById(
-        "loadingScreen"
-      );
+  const loadingScreen =
+    $("loadingScreen");
 
-    const introVideo =
-      document.getElementById(
-        "introVideo"
-      );
+  const video =
+    $("introVideo");
 
-    const skipLoading =
-      document.getElementById(
-        "skipLoading"
-      );
+  const skip =
+    $("skipLoading");
+
+  const app =
+    $("app");
 
 
-    // ---------------------------------------------
-    // Fungsi selesai loading
-    // ---------------------------------------------
+  let finished =
+    false;
 
-    function selesaiLoading() {
 
-      if (!loadingScreen) {
-        return;
-      }
+  function finishLoading() {
+
+    if (finished) {
+
+      return;
+
+    }
+
+
+    finished = true;
+
+
+    if (loadingScreen) {
 
       loadingScreen.classList.add(
         "hidden"
       );
 
-      console.log(
-        "Loading screen selesai."
+    }
+
+
+    if (app) {
+
+      app.classList.remove(
+        "hidden"
       );
 
     }
 
-
-    // ---------------------------------------------
-    // Tombol Skip
-    // ---------------------------------------------
-
-    if (skipLoading) {
-
-      skipLoading.addEventListener(
-        "click",
-        selesaiLoading
-      );
-
-    }
+  }
 
 
-    // ---------------------------------------------
-    // Video selesai
-    // ---------------------------------------------
+  // Skip
 
-    if (introVideo) {
+  if (skip) {
 
-      introVideo.addEventListener(
-        "ended",
-        selesaiLoading
-      );
-
-
-      // -------------------------------------------
-      // Jika video gagal
-      // -------------------------------------------
-
-      introVideo.addEventListener(
-        "error",
-        () => {
-
-          console.warn(
-            "Video loading gagal."
-          );
-
-          selesaiLoading();
-
-        }
-      );
-
-    }
-
-
-    // ---------------------------------------------
-    // Pengaman
-    // Loading maksimal 5 detik
-    // ---------------------------------------------
-
-    setTimeout(
-      selesaiLoading,
-      5000
+    skip.addEventListener(
+      "click",
+      finishLoading
     );
 
   }
-);
+
+
+  // Video selesai
+
+  if (video) {
+
+    video.addEventListener(
+      "ended",
+      finishLoading
+    );
+
+
+    // Video error
+
+    video.addEventListener(
+      "error",
+      finishLoading
+    );
+
+  }
+
+
+  // Jangan pernah stuck
+  // maksimal 5 detik
+
+  setTimeout(
+    finishLoading,
+    5000
+  );
+
+}
 
 
 // =====================================================
-// AMBIL SOAL DARI FIREBASE
+// SCREEN
 // =====================================================
 
-if (questionsRef) {
+function showScreen(screenId) {
+
+  const screens = [
+
+    "loginScreen",
+
+    "adminLoginScreen",
+
+    "studentScreen",
+
+    "adminScreen",
+
+    "quizScreen",
+
+    "resultScreen"
+
+  ];
+
+
+  screens.forEach(
+    id => {
+
+      const element =
+        $(id);
+
+
+      if (element) {
+
+        element.classList.add(
+          "hidden"
+        );
+
+      }
+
+    }
+  );
+
+
+  const target =
+    $(screenId);
+
+
+  if (target) {
+
+    target.classList.remove(
+      "hidden"
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// FIREBASE LISTENER
+// =====================================================
+
+function listenQuestions() {
+
+  if (
+    !firebaseReady ||
+    !questionsRef
+  ) {
+
+    return;
+
+  }
+
 
   onValue(
 
     questionsRef,
 
-    (snapshot) => {
+    snapshot => {
 
       const data =
         snapshot.val();
 
 
-      // -------------------------------------------
-      // Tidak ada soal
-      // -------------------------------------------
-
       if (!data) {
 
         questions = [];
 
-        console.log(
-          "Database belum memiliki soal."
-        );
-
-      }
-
-      // -------------------------------------------
-      // Ada soal
-      // -------------------------------------------
-
-      else {
+      } else {
 
         questions =
-          Object.entries(data).map(
+          Object.entries(
+            data
+          ).map(
             ([id, question]) => ({
 
               id,
@@ -234,514 +493,37 @@ if (questionsRef) {
 
 
       console.log(
-        "Jumlah soal:",
+        "Soal:",
         questions.length
       );
 
 
-      // -------------------------------------------
-      // Update statistik admin
-      // -------------------------------------------
+      updateAdminStats();
 
-      if (
-        typeof updateAdminStats ===
-        "function"
-      ) {
+      updateSubjectFilter();
 
-        updateAdminStats();
+      renderAdminQuestions();
 
-      }
-
-
-      // -------------------------------------------
-      // Update filter
-      // -------------------------------------------
-
-      if (
-        typeof updateSubjectFilter ===
-        "function"
-      ) {
-
-        updateSubjectFilter();
-
-      }
+      updateStudentSubject();
 
     },
 
 
-    // ---------------------------------------------
-    // Firebase error
-    // ---------------------------------------------
-
-    (error) => {
+    error => {
 
       console.error(
-        "Firebase Database Error:",
+        "Database listener error:",
         error
       );
 
-      // Jangan sampai Firebase error
-      // membuat website stuck
 
-      questions = [];
+      setDatabaseStatus(
+        "Tidak dapat membaca database. Periksa Rules Firebase."
+      );
 
     }
 
   );
-
-}
-
-
-// =====================================================
-// SOAL IPS
-// =====================================================
-
-async function tambahSoalIPS() {
-
-  if (!questionsRef) {
-
-    console.error(
-      "Firebase belum tersedia."
-    );
-
-    return;
-
-  }
-
-
-  const soalIPS = [
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Apa yang dimaksud dengan uang?",
-
-      answers: {
-
-        A:
-          "Alat untuk memenuhi kebutuhan manusia",
-
-        B:
-          "Alat pembayaran yang sah dan diterima masyarakat",
-
-        C:
-          "Barang yang hanya digunakan untuk ditabung",
-
-        D:
-          "Surat berharga milik pemerintah"
-
-      },
-
-      correct: "B"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Lembaga yang bertugas menghimpun dana dari masyarakat dan menyalurkannya kembali dalam bentuk kredit disebut...",
-
-      answers: {
-
-        A: "Bank",
-
-        B: "Pasar modal",
-
-        C: "Pegadaian",
-
-        D: "Perusahaan asuransi"
-
-      },
-
-      correct: "A"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Bank Indonesia merupakan...",
-
-      answers: {
-
-        A: "Bank umum",
-
-        B: "Bank swasta",
-
-        C: "Bank sentral",
-
-        D: "Bank perkreditan rakyat"
-
-      },
-
-      correct: "C"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Salah satu fungsi utama bank adalah...",
-
-      answers: {
-
-        A:
-          "Menghimpun dan menyalurkan dana",
-
-        B:
-          "Menjual kebutuhan pokok",
-
-        C:
-          "Memproduksi barang",
-
-        D:
-          "Mengelola perusahaan"
-
-      },
-
-      correct: "A"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Simpanan yang penarikannya dapat dilakukan menggunakan cek atau bilyet giro disebut...",
-
-      answers: {
-
-        A: "Deposito",
-
-        B: "Tabungan",
-
-        C: "Giro",
-
-        D: "Saham"
-
-      },
-
-      correct: "C"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Simpanan di bank yang penarikannya dilakukan sesuai jangka waktu tertentu disebut...",
-
-      answers: {
-
-        A: "Giro",
-
-        B: "Deposito",
-
-        C: "Cek",
-
-        D: "Kredit"
-
-      },
-
-      correct: "B"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Kegiatan bank memberikan pinjaman kepada masyarakat disebut...",
-
-      answers: {
-
-        A: "Menghimpun dana",
-
-        B: "Menyalurkan kredit",
-
-        C: "Mencetak uang",
-
-        D: "Menjual saham"
-
-      },
-
-      correct: "B"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Lembaga yang memberikan perlindungan terhadap risiko tertentu dengan pembayaran premi disebut...",
-
-      answers: {
-
-        A: "Pegadaian",
-
-        B: "Koperasi",
-
-        C: "Perusahaan asuransi",
-
-        D: "Pasar modal"
-
-      },
-
-      correct: "C"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Pegadaian memberikan pinjaman dengan jaminan berupa...",
-
-      answers: {
-
-        A: "Barang berharga",
-
-        B: "Nilai rapor",
-
-        C: "Kartu pelajar",
-
-        D: "Surat izin sekolah"
-
-      },
-
-      correct: "A"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "OJK merupakan singkatan dari...",
-
-      answers: {
-
-        A: "Organisasi Jasa Keuangan",
-
-        B: "Otoritas Jasa Keuangan",
-
-        C: "Organisasi Jaminan Keuangan",
-
-        D: "Otoritas Jaminan Kredit"
-
-      },
-
-      correct: "B"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Salah satu tugas OJK adalah...",
-
-      answers: {
-
-        A:
-          "Mengawasi sektor jasa keuangan",
-
-        B:
-          "Mencetak semua uang rupiah",
-
-        C:
-          "Menentukan harga barang di pasar",
-
-        D:
-          "Membuat undang-undang negara"
-
-      },
-
-      correct: "A"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Lembaga yang menjamin simpanan nasabah bank disebut...",
-
-      answers: {
-
-        A: "OJK",
-
-        B: "BI",
-
-        C: "LPS",
-
-        D: "BPK"
-
-      },
-
-      correct: "C"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Koperasi yang kegiatan utamanya memberikan pinjaman dan menerima simpanan anggota disebut...",
-
-      answers: {
-
-        A: "Koperasi produksi",
-
-        B: "Koperasi konsumsi",
-
-        C: "Koperasi simpan pinjam",
-
-        D: "Koperasi jasa"
-
-      },
-
-      correct: "C"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Tempat bertemunya pihak yang membutuhkan dana dengan pihak yang memiliki dana melalui perdagangan efek disebut...",
-
-      answers: {
-
-        A: "Pasar tradisional",
-
-        B: "Pasar modal",
-
-        C: "Pasar barang",
-
-        D: "Pasar tenaga kerja"
-
-      },
-
-      correct: "B"
-
-    },
-
-
-    {
-      subject:
-        "IPS - Keuangan dan Lembaga Keuangan",
-
-      question:
-        "Bukti kepemilikan seseorang terhadap suatu perusahaan disebut...",
-
-      answers: {
-
-        A: "Obligasi",
-
-        B: "Saham",
-
-        C: "Cek",
-
-        D: "Deposito"
-
-      },
-
-      correct: "B"
-
-    }
-
-  ];
-
-
-  try {
-
-    // -------------------------------------------
-    // Cek apakah database sudah ada isinya
-    // -------------------------------------------
-
-    if (questions.length > 0) {
-
-      console.log(
-        "Soal sudah ada. Tidak menambahkan ulang."
-      );
-
-      return;
-
-    }
-
-
-    // -------------------------------------------
-    // Tambahkan soal
-    // -------------------------------------------
-
-    for (
-      const soal of soalIPS
-    ) {
-
-      const soalBaru =
-        push(questionsRef);
-
-
-      await set(
-        soalBaru,
-        {
-
-          ...soal,
-
-          createdAt:
-            Date.now()
-
-        }
-      );
-
-    }
-
-
-    console.log(
-      "15 soal IPS berhasil ditambahkan."
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Gagal menambahkan soal IPS:",
-      error
-    );
-
-  }
 
 }
 
@@ -749,244 +531,129 @@ async function tambahSoalIPS() {
 // =====================================================
 // ADMIN LOGIN
 // =====================================================
+//
+// Untuk demo awal.
+// Untuk website publik sebaiknya menggunakan
+// Firebase Authentication.
+// =====================================================
 
-const ADMIN_USERNAME = "admin";
+const ADMIN_USERNAME =
+  "admin";
+
 
 const ADMIN_PASSWORD =
-  "GANTI_PASSWORD_ADMIN";
-
-
-function loginAdmin(
-  username,
-  password
-) {
-
-  if (
-    username === ADMIN_USERNAME &&
-    password === ADMIN_PASSWORD
-  ) {
-
-    const loginScreen =
-      document.getElementById(
-        "loginScreen"
-      );
-
-    const adminScreen =
-      document.getElementById(
-        "adminScreen"
-      );
-
-
-    if (loginScreen) {
-
-      loginScreen.classList.add(
-        "hidden"
-      );
-
-    }
-
-
-    if (adminScreen) {
-
-      adminScreen.classList.remove(
-        "hidden"
-      );
-
-    }
-
-
-    return true;
-
-  }
-
-
-  alert(
-    "Username atau password admin salah."
-  );
-
-
-  return false;
-
-}
+  "admin123";
 
 
 // =====================================================
-// TAMBAH SOAL DARI ADMIN
+// ADMIN LOGIN EVENT
 // =====================================================
 
-async function tambahSoal(
-  subject,
-  question,
-  A,
-  B,
-  C,
-  D,
-  correct
-) {
+function setupAdminLogin() {
 
-  if (!questionsRef) {
+  const form =
+    $("adminLoginForm");
 
-    alert(
-      "Firebase belum terhubung."
-    );
+
+  if (!form) {
 
     return;
 
   }
 
 
-  try {
+  form.addEventListener(
+    "submit",
+    event => {
 
-    const soalBaru =
-      push(questionsRef);
+      event.preventDefault();
 
 
-    await set(
-      soalBaru,
-      {
+      const username =
+        $("adminUsername").value.trim();
 
-        subject,
 
-        question,
+      const password =
+        $("adminPassword").value;
 
-        answers: {
 
-          A,
+      if (
+        username ===
+          ADMIN_USERNAME &&
+        password ===
+          ADMIN_PASSWORD
+      ) {
 
-          B,
+        $("adminUsername").value =
+          "";
 
-          C,
+        $("adminPassword").value =
+          "";
 
-          D
 
-        },
+        showScreen(
+          "adminScreen"
+        );
 
-        correct,
 
-        createdAt:
-          Date.now()
+        renderAdminQuestions();
+
+
+        showToast(
+          "Login admin berhasil."
+        );
+
+      } else {
+
+        $("adminLoginMessage").textContent =
+          "Username atau password salah.";
 
       }
-    );
 
-
-    alert(
-      "Soal berhasil ditambahkan!"
-    );
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "Gagal menambahkan soal."
-    );
-
-  }
+    }
+  );
 
 }
 
 
 // =====================================================
-// HAPUS SOAL
-// =====================================================
-
-async function hapusSoal(id) {
-
-  if (
-    !confirm(
-      "Yakin ingin menghapus soal ini?"
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    await remove(
-      ref(
-        database,
-        `questions/${id}`
-      )
-    );
-
-
-    alert(
-      "Soal berhasil dihapus."
-    );
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "Gagal menghapus soal."
-    );
-
-  }
-
-}
-
-
-// =====================================================
-// EDIT SOAL
-// =====================================================
-
-async function editSoal(
-  id,
-  data
-) {
-
-  try {
-
-    await update(
-      ref(
-        database,
-        `questions/${id}`
-      ),
-      data
-    );
-
-
-    alert(
-      "Soal berhasil diperbarui."
-    );
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "Gagal memperbarui soal."
-    );
-
-  }
-
-}
-
-
-// =====================================================
-// STATISTIK ADMIN
+// ADMIN DASHBOARD
 // =====================================================
 
 function updateAdminStats() {
 
-  const totalSoal =
-    document.getElementById(
-      "totalQuestions"
-    );
+  const totalQuestions =
+    $("totalQuestions");
 
 
-  if (totalSoal) {
+  const totalSubjects =
+    $("totalSubjects");
 
-    totalSoal.textContent =
+
+  const subjects =
+    [
+      ...new Set(
+        questions
+          .map(
+            q => q.subject
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+  if (totalQuestions) {
+
+    totalQuestions.textContent =
       questions.length;
+
+  }
+
+
+  if (totalSubjects) {
+
+    totalSubjects.textContent =
+      subjects.length;
 
   }
 
@@ -994,15 +661,13 @@ function updateAdminStats() {
 
 
 // =====================================================
-// FILTER MATA PELAJARAN
+// SUBJECT FILTER
 // =====================================================
 
 function updateSubjectFilter() {
 
   const filter =
-    document.getElementById(
-      "subjectFilter"
-    );
+    $("subjectFilter");
 
 
   if (!filter) {
@@ -1010,6 +675,10 @@ function updateSubjectFilter() {
     return;
 
   }
+
+
+  const oldValue =
+    filter.value;
 
 
   const subjects =
@@ -1035,143 +704,68 @@ function updateSubjectFilter() {
   subjects.forEach(
     subject => {
 
-      filter.innerHTML +=
-        `
-          <option value="${subject}">
-            ${subject}
-          </option>
-        `;
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        subject;
+
+
+      option.textContent =
+        subject;
+
+
+      filter.appendChild(
+        option
+      );
 
     }
   );
+
+
+  if (
+    subjects.includes(
+      oldValue
+    )
+  ) {
+
+    filter.value =
+      oldValue;
+
+  }
 
 }
 
 
 // =====================================================
-// MULAI QUIZ
+// ADMIN QUESTION LIST
 // =====================================================
 
-window.mulaiQuiz =
-  function(subject = "Semua") {
+function renderAdminQuestions() {
 
-    selectedSubject =
-      subject;
-
-
-    currentQuestion = 0;
-
-    score = 0;
+  const container =
+    $("adminQuestionList");
 
 
-    const loginScreen =
-      document.getElementById(
-        "loginScreen"
-      );
-
-    const adminScreen =
-      document.getElementById(
-        "adminScreen"
-      );
-
-    const quizScreen =
-      document.getElementById(
-        "quizScreen"
-      );
-
-    const resultScreen =
-      document.getElementById(
-        "resultScreen"
-      );
-
-
-    if (loginScreen) {
-
-      loginScreen.classList.add(
-        "hidden"
-      );
-
-    }
-
-
-    if (adminScreen) {
-
-      adminScreen.classList.add(
-        "hidden"
-      );
-
-    }
-
-
-    if (resultScreen) {
-
-      resultScreen.classList.add(
-        "hidden"
-      );
-
-    }
-
-
-    if (quizScreen) {
-
-      quizScreen.classList.remove(
-        "hidden"
-      );
-
-    }
-
-
-    renderQuiz();
-
-  };
-
-
-// =====================================================
-// RENDER QUIZ
-// =====================================================
-
-function renderQuiz() {
-
-  const quizScreen =
-    document.getElementById(
-      "quizScreen"
-    );
-
-
-  if (!quizScreen) {
+  if (!container) {
 
     return;
 
   }
 
 
-  const filteredQuestions =
-    selectedSubject === "Semua"
-
-      ? questions
-
-      : questions.filter(
-          q =>
-            q.subject ===
-            selectedSubject
-        );
-
-
   if (
-    filteredQuestions.length === 0
+    questions.length === 0
   ) {
 
-    quizScreen.innerHTML =
+    container.innerHTML =
       `
-        <div class="quiz-card">
+        <div class="empty-state">
 
-          <h2>
-            Belum ada soal.
-          </h2>
-
-          <p>
-            Admin belum menambahkan soal.
-          </p>
+          Belum ada soal.
 
         </div>
       `;
@@ -1181,158 +775,1214 @@ function renderQuiz() {
   }
 
 
-  const soal =
-    filteredQuestions[
-      currentQuestion
-    ];
+  container.innerHTML =
+    "";
 
 
-  if (!soal) {
+  questions.forEach(
+    question => {
+
+      const item =
+        document.createElement(
+          "div"
+        );
+
+
+      item.className =
+        "question-item";
+
+
+      const questionText =
+        escapeHtml(
+          question.question ||
+          ""
+        );
+
+
+      const subject =
+        escapeHtml(
+          question.subject ||
+          "Tanpa Mata Pelajaran"
+        );
+
+
+      item.innerHTML =
+        `
+
+          <div
+            class="question-item-header"
+          >
+
+            <div>
+
+              <span
+                class="subject-badge"
+              >
+                ${subject}
+              </span>
+
+              <h4>
+                ${questionText}
+              </h4>
+
+            </div>
+
+
+            <div
+              class="question-actions"
+            >
+
+              <button
+                class="btn-edit"
+                data-id="${question.id}"
+              >
+                Edit
+              </button>
+
+              <button
+                class="btn-delete"
+                data-id="${question.id}"
+              >
+                Hapus
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+
+      container.appendChild(
+        item
+      );
+
+    }
+  );
+
+
+  container
+    .querySelectorAll(
+      ".btn-edit"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const id =
+              button.dataset.id;
+
+            openEditQuestion(
+              id
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  container
+    .querySelectorAll(
+      ".btn-delete"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const id =
+              button.dataset.id;
+
+            deleteQuestion(
+              id
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
+
+function escapeHtml(value) {
+
+  return String(value)
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+// =====================================================
+// MODAL
+// =====================================================
+
+function openAddQuestion() {
+
+  $("modalTitle").textContent =
+    "Tambah Soal";
+
+
+  $("editQuestionId").value =
+    "";
+
+
+  $("questionForm").reset();
+
+
+  $("questionModal")
+    .classList.remove(
+      "hidden"
+    );
+
+}
+
+
+function closeModal() {
+
+  $("questionModal")
+    .classList.add(
+      "hidden"
+    );
+
+}
+
+
+// =====================================================
+// EDIT QUESTION
+// =====================================================
+
+function openEditQuestion(id) {
+
+  const question =
+    questions.find(
+      q => q.id === id
+    );
+
+
+  if (!question) {
 
     return;
 
   }
 
 
-  quizScreen.innerHTML =
-    `
-
-      <div class="quiz-card">
-
-        <div class="quiz-header">
-
-          <span>
-            Soal
-            ${currentQuestion + 1}
-            dari
-            ${filteredQuestions.length}
-          </span>
-
-          <span id="timer">
-            30
-          </span>
-
-        </div>
+  $("modalTitle").textContent =
+    "Edit Soal";
 
 
-        <h2>
-          ${soal.question}
-        </h2>
+  $("editQuestionId").value =
+    id;
 
 
-        <div class="answers">
-
-          ${Object.entries(
-            soal.answers || {}
-          )
-            .map(
-              ([key, value]) =>
-
-                `
-
-                  <button
-                    class="answer-btn"
-                    onclick="jawabSoal('${key}')"
-                  >
-
-                    <strong>
-                      ${key}.
-                    </strong>
-
-                    ${value}
-
-                  </button>
-
-                `
-            )
-            .join("")}
-
-        </div>
-
-      </div>
-
-    `;
+  $("questionSubject").value =
+    question.subject || "";
 
 
-  mulaiTimer();
+  $("questionText").value =
+    question.question || "";
+
+
+  $("answerA").value =
+    question.answers?.A || "";
+
+
+  $("answerB").value =
+    question.answers?.B || "";
+
+
+  $("answerC").value =
+    question.answers?.C || "";
+
+
+  $("answerD").value =
+    question.answers?.D || "";
+
+
+  $("correctAnswer").value =
+    question.correct || "A";
+
+
+  $("questionModal")
+    .classList.remove(
+      "hidden"
+    );
 
 }
 
 
 // =====================================================
-// JAWAB SOAL
+// SAVE QUESTION
 // =====================================================
 
-window.jawabSoal =
-  function(jawaban) {
+async function saveQuestion(
+  event
+) {
 
-    clearInterval(timer);
-
-
-    const filteredQuestions =
-      selectedSubject === "Semua"
-
-        ? questions
-
-        : questions.filter(
-            q =>
-              q.subject ===
-              selectedSubject
-          );
+  event.preventDefault();
 
 
-    const soal =
-      filteredQuestions[
-        currentQuestion
-      ];
+  if (!firebaseReady) {
+
+    showToast(
+      "Firebase belum dikonfigurasi."
+    );
+
+    return;
+
+  }
 
 
-    if (!soal) {
-
-      return;
-
-    }
+  const id =
+    $("editQuestionId").value;
 
 
-    if (
-      jawaban ===
-      soal.correct
-    ) {
+  const questionData = {
 
-      score++;
+    subject:
+      $("questionSubject")
+        .value
+        .trim(),
 
-    }
+    question:
+      $("questionText")
+        .value
+        .trim(),
+
+    answers: {
+
+      A:
+        $("answerA")
+          .value
+          .trim(),
+
+      B:
+        $("answerB")
+          .value
+          .trim(),
+
+      C:
+        $("answerC")
+          .value
+          .trim(),
+
+      D:
+        $("answerD")
+          .value
+          .trim()
+
+    },
+
+    correct:
+      $("correctAnswer")
+        .value,
+
+    updatedAt:
+      Date.now()
+
+  };
 
 
-    currentQuestion++;
+  try {
+
+    if (id) {
+
+      await update(
+
+        ref(
+          database,
+          `questions/${id}`
+        ),
+
+        questionData
+
+      );
 
 
-    if (
-      currentQuestion >=
-      filteredQuestions.length
-    ) {
-
-      tampilkanHasil();
+      showToast(
+        "Soal berhasil diperbarui."
+      );
 
     } else {
 
-      renderQuiz();
+      await set(
+
+        push(
+          questionsRef
+        ),
+
+        {
+
+          ...questionData,
+
+          createdAt:
+            Date.now()
+
+        }
+
+      );
+
+
+      showToast(
+        "Soal berhasil ditambahkan."
+      );
 
     }
 
-  };
+
+    closeModal();
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    showToast(
+      "Gagal menyimpan soal. Periksa Firebase Rules."
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// DELETE QUESTION
+// =====================================================
+
+async function deleteQuestion(
+  id
+) {
+
+  if (
+    !confirm(
+      "Yakin ingin menghapus soal ini?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  if (!firebaseReady) {
+
+    showToast(
+      "Firebase belum terhubung."
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    await remove(
+      ref(
+        database,
+        `questions/${id}`
+      )
+    );
+
+
+    showToast(
+      "Soal berhasil dihapus."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    showToast(
+      "Gagal menghapus soal."
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// 15 SOAL IPS
+// =====================================================
+
+const soalIPS = [
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Apa yang dimaksud dengan uang?",
+
+    answers: {
+
+      A:
+        "Alat untuk memenuhi kebutuhan manusia",
+
+      B:
+        "Alat pembayaran yang sah dan diterima masyarakat",
+
+      C:
+        "Barang yang hanya digunakan untuk ditabung",
+
+      D:
+        "Surat berharga milik pemerintah"
+
+    },
+
+    correct:
+      "B"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Lembaga yang bertugas menghimpun dana dari masyarakat dan menyalurkannya kembali dalam bentuk kredit disebut...",
+
+    answers: {
+
+      A: "Bank",
+
+      B: "Pasar modal",
+
+      C: "Pegadaian",
+
+      D: "Perusahaan asuransi"
+
+    },
+
+    correct:
+      "A"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Bank Indonesia merupakan...",
+
+    answers: {
+
+      A: "Bank umum",
+
+      B: "Bank swasta",
+
+      C: "Bank sentral",
+
+      D: "Bank perkreditan rakyat"
+
+    },
+
+    correct:
+      "C"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Salah satu fungsi utama bank adalah...",
+
+    answers: {
+
+      A:
+        "Menghimpun dan menyalurkan dana",
+
+      B:
+        "Menjual kebutuhan pokok",
+
+      C:
+        "Memproduksi barang",
+
+      D:
+        "Mengelola perusahaan"
+
+    },
+
+    correct:
+      "A"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Simpanan yang penarikannya dapat dilakukan menggunakan cek atau bilyet giro disebut...",
+
+    answers: {
+
+      A: "Deposito",
+
+      B: "Tabungan",
+
+      C: "Giro",
+
+      D: "Saham"
+
+    },
+
+    correct:
+      "C"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Simpanan di bank yang penarikannya dilakukan sesuai jangka waktu tertentu disebut...",
+
+    answers: {
+
+      A: "Giro",
+
+      B: "Deposito",
+
+      C: "Cek",
+
+      D: "Kredit"
+
+    },
+
+    correct:
+      "B"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Kegiatan bank memberikan pinjaman kepada masyarakat disebut...",
+
+    answers: {
+
+      A:
+        "Menghimpun dana",
+
+      B:
+        "Menyalurkan kredit",
+
+      C:
+        "Mencetak uang",
+
+      D:
+        "Menjual saham"
+
+    },
+
+    correct:
+      "B"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Lembaga yang memberikan perlindungan terhadap risiko tertentu dengan pembayaran premi disebut...",
+
+    answers: {
+
+      A: "Pegadaian",
+
+      B: "Koperasi",
+
+      C: "Perusahaan asuransi",
+
+      D: "Pasar modal"
+
+    },
+
+    correct:
+      "C"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Pegadaian memberikan pinjaman dengan jaminan berupa...",
+
+    answers: {
+
+      A: "Barang berharga",
+
+      B: "Nilai rapor",
+
+      C: "Kartu pelajar",
+
+      D: "Surat izin sekolah"
+
+    },
+
+    correct:
+      "A"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "OJK merupakan singkatan dari...",
+
+    answers: {
+
+      A:
+        "Organisasi Jasa Keuangan",
+
+      B:
+        "Otoritas Jasa Keuangan",
+
+      C:
+        "Organisasi Jaminan Keuangan",
+
+      D:
+        "Otoritas Jaminan Kredit"
+
+    },
+
+    correct:
+      "B"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Salah satu tugas OJK adalah...",
+
+    answers: {
+
+      A:
+        "Mengawasi sektor jasa keuangan",
+
+      B:
+        "Mencetak semua uang rupiah",
+
+      C:
+        "Menentukan harga barang di pasar",
+
+      D:
+        "Membuat undang-undang negara"
+
+    },
+
+    correct:
+      "A"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Lembaga yang menjamin simpanan nasabah bank disebut...",
+
+    answers: {
+
+      A: "OJK",
+
+      B: "BI",
+
+      C: "LPS",
+
+      D: "BPK"
+
+    },
+
+    correct:
+      "C"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Koperasi yang kegiatan utamanya memberikan pinjaman dan menerima simpanan anggota disebut...",
+
+    answers: {
+
+      A: "Koperasi produksi",
+
+      B: "Koperasi konsumsi",
+
+      C: "Koperasi simpan pinjam",
+
+      D: "Koperasi jasa"
+
+    },
+
+    correct:
+      "C"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Tempat bertemunya pihak yang membutuhkan dana dengan pihak yang memiliki dana melalui perdagangan efek disebut...",
+
+    answers: {
+
+      A: "Pasar tradisional",
+
+      B: "Pasar modal",
+
+      C: "Pasar barang",
+
+      D: "Pasar tenaga kerja"
+
+    },
+
+    correct:
+      "B"
+
+  },
+
+
+  {
+    subject:
+      "IPS - Keuangan dan Lembaga Keuangan",
+
+    question:
+      "Bukti kepemilikan seseorang terhadap suatu perusahaan disebut...",
+
+    answers: {
+
+      A: "Obligasi",
+
+      B: "Saham",
+
+      C: "Cek",
+
+      D: "Deposito"
+
+    },
+
+    correct:
+      "B"
+
+  }
+
+];
+
+
+// =====================================================
+// TAMBAHKAN 15 SOAL IPS
+// =====================================================
+
+async function tambahSoalIPS() {
+
+  if (!firebaseReady) {
+
+    showToast(
+      "Firebase belum terhubung."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    questions.some(
+      q =>
+        q.subject ===
+        "IPS - Keuangan dan Lembaga Keuangan"
+    )
+  ) {
+
+    showToast(
+      "Soal IPS sudah ada di database."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    !confirm(
+      "Tambahkan 15 soal IPS ke database?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    for (
+      const soal of soalIPS
+    ) {
+
+      const newRef =
+        push(
+          questionsRef
+        );
+
+
+      await set(
+        newRef,
+        {
+
+          ...soal,
+
+          createdAt:
+            Date.now()
+
+        }
+      );
+
+    }
+
+
+    showToast(
+      "15 soal IPS berhasil ditambahkan!"
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    showToast(
+      "Gagal menambahkan soal IPS. Periksa Firebase Rules."
+    );
+
+  }
+
+}
+
+
+// =====================================================
+// STUDENT SUBJECT
+// =====================================================
+
+function updateStudentSubject() {
+
+  updateSubjectFilter();
+
+}
+
+
+// =====================================================
+// MULAI QUIZ
+// =====================================================
+
+function startQuiz() {
+
+  selectedSubject =
+    $("subjectFilter").value;
+
+
+  quizQuestions =
+    selectedSubject === "Semua"
+
+      ? [...questions]
+
+      : questions.filter(
+          q =>
+            q.subject ===
+            selectedSubject
+        );
+
+
+  if (
+    quizQuestions.length === 0
+  ) {
+
+    showToast(
+      "Belum ada soal untuk mata pelajaran tersebut."
+    );
+
+    return;
+
+  }
+
+
+  // Acak soal
+
+  quizQuestions.sort(
+    () =>
+      Math.random() - 0.5
+  );
+
+
+  currentQuestion = 0;
+
+  score = 0;
+
+
+  showScreen(
+    "quizScreen"
+  );
+
+
+  renderQuiz();
+
+}
+
+
+// =====================================================
+// RENDER QUIZ
+// =====================================================
+
+function renderQuiz() {
+
+  clearInterval(
+    timer
+  );
+
+
+  const question =
+    quizQuestions[
+      currentQuestion
+    ];
+
+
+  if (!question) {
+
+    finishQuiz();
+
+    return;
+
+  }
+
+
+  $("quizProgress").textContent =
+    `Soal ${currentQuestion + 1} dari ${quizQuestions.length}`;
+
+
+  $("quizSubject").textContent =
+    question.subject ||
+    "Quiz";
+
+
+  $("quizQuestion").textContent =
+    question.question ||
+    "";
+
+
+  const answers =
+    $("quizAnswers");
+
+
+  answers.innerHTML =
+    "";
+
+
+  const letters = [
+    "A",
+    "B",
+    "C",
+    "D"
+  ];
+
+
+  letters.forEach(
+    letter => {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.className =
+        "answer-btn";
+
+
+      button.innerHTML =
+        `
+          <strong>
+            ${letter}.
+          </strong>
+
+          ${escapeHtml(
+            question.answers?.[
+              letter
+            ] || ""
+          )}
+        `;
+
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          answerQuestion(
+            letter
+          );
+
+        }
+      );
+
+
+      answers.appendChild(
+        button
+      );
+
+    }
+  );
+
+
+  startTimer();
+
+}
+
+
+// =====================================================
+// ANSWER
+// =====================================================
+
+function answerQuestion(
+  answer
+) {
+
+  clearInterval(
+    timer
+  );
+
+
+  const question =
+    quizQuestions[
+      currentQuestion
+    ];
+
+
+  if (
+    answer ===
+    question.correct
+  ) {
+
+    score++;
+
+  }
+
+
+  currentQuestion++;
+
+
+  if (
+    currentQuestion >=
+    quizQuestions.length
+  ) {
+
+    finishQuiz();
+
+  } else {
+
+    renderQuiz();
+
+  }
+
+}
 
 
 // =====================================================
 // TIMER
 // =====================================================
 
-function mulaiTimer() {
+function startTimer() {
 
-  clearInterval(timer);
+  clearInterval(
+    timer
+  );
 
 
   timeLeft = 30;
+
+
+  $("timer").textContent =
+    timeLeft;
 
 
   timer =
@@ -1342,48 +1992,28 @@ function mulaiTimer() {
         timeLeft--;
 
 
-        const timerElement =
-          document.getElementById(
-            "timer"
-          );
-
-
-        if (timerElement) {
-
-          timerElement.textContent =
-            timeLeft;
-
-        }
+        $("timer").textContent =
+          timeLeft;
 
 
         if (
           timeLeft <= 0
         ) {
 
-          clearInterval(timer);
+          clearInterval(
+            timer
+          );
 
 
           currentQuestion++;
 
 
-          const filteredQuestions =
-            selectedSubject === "Semua"
-
-              ? questions
-
-              : questions.filter(
-                  q =>
-                    q.subject ===
-                    selectedSubject
-                );
-
-
           if (
             currentQuestion >=
-            filteredQuestions.length
+            quizQuestions.length
           ) {
 
-            tampilkanHasil();
+            finishQuiz();
 
           } else {
 
@@ -1394,69 +2024,25 @@ function mulaiTimer() {
         }
 
       },
-
       1000
-
     );
 
 }
 
 
 // =====================================================
-// HASIL QUIZ
+// FINISH QUIZ
 // =====================================================
 
-function tampilkanHasil() {
+function finishQuiz() {
 
-  clearInterval(timer);
-
-
-  const quizScreen =
-    document.getElementById(
-      "quizScreen"
-    );
-
-  const resultScreen =
-    document.getElementById(
-      "resultScreen"
-    );
-
-
-  if (quizScreen) {
-
-    quizScreen.classList.add(
-      "hidden"
-    );
-
-  }
-
-
-  if (!resultScreen) {
-
-    return;
-
-  }
-
-
-  resultScreen.classList.remove(
-    "hidden"
+  clearInterval(
+    timer
   );
 
 
-  const filteredQuestions =
-    selectedSubject === "Semua"
-
-      ? questions
-
-      : questions.filter(
-          q =>
-            q.subject ===
-            selectedSubject
-        );
-
-
   const total =
-    filteredQuestions.length;
+    quizQuestions.length;
 
 
   const nilai =
@@ -1470,74 +2056,221 @@ function tampilkanHasil() {
       : 0;
 
 
-  resultScreen.innerHTML =
-    `
+  $("resultScore").textContent =
+    nilai;
 
-      <div class="result-card">
 
-        <h1>
-          Quiz Selesai!
-        </h1>
+  $("resultDetail").textContent =
+    `${score} dari ${total} jawaban benar`;
 
-        <p>
-          Jawaban benar:
-        </p>
 
-        <h2>
-          ${score} / ${total}
-        </h2>
-
-        <p>
-          Nilai kamu:
-        </p>
-
-        <h1>
-          ${nilai}
-        </h1>
-
-        <button
-          onclick="location.reload()"
-        >
-          Kembali
-        </button>
-
-      </div>
-
-    `;
+  showScreen(
+    "resultScreen"
+  );
 
 }
 
 
 // =====================================================
-// EXPORT KE WINDOW
+// SETUP EVENT
 // =====================================================
 
-window.loginAdmin =
-  loginAdmin;
+function setupEvents() {
 
-window.tambahSoal =
-  tambahSoal;
 
-window.hapusSoal =
-  hapusSoal;
+  // Admin login
 
-window.editSoal =
-  editSoal;
+  $("showAdminLogin")
+    ?.addEventListener(
+      "click",
+      () => {
 
-window.tambahSoalIPS =
-  tambahSoalIPS;
+        showScreen(
+          "adminLoginScreen"
+        );
+
+      }
+    );
+
+
+  // Back admin
+
+  $("backFromAdminLogin")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        showScreen(
+          "loginScreen"
+        );
+
+      }
+    );
+
+
+  // Student
+
+  $("studentLogin")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        updateSubjectFilter();
+
+        showScreen(
+          "studentScreen"
+        );
+
+      }
+    );
+
+
+  // Back student
+
+  $("backFromStudent")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        showScreen(
+          "loginScreen"
+        );
+
+      }
+    );
+
+
+  // Start quiz
+
+  $("startQuiz")
+    ?.addEventListener(
+      "click",
+      startQuiz
+    );
+
+
+  // Quit quiz
+
+  $("quitQuiz")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        clearInterval(
+          timer
+        );
+
+        showScreen(
+          "studentScreen"
+        );
+
+      }
+    );
+
+
+  // Result → Home
+
+  $("backToHome")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        showScreen(
+          "loginScreen"
+        );
+
+      }
+    );
+
+
+  // Admin logout
+
+  $("adminLogout")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        showScreen(
+          "loginScreen"
+        );
+
+      }
+    );
+
+
+  // Add question
+
+  $("addQuestionButton")
+    ?.addEventListener(
+      "click",
+      openAddQuestion
+    );
+
+
+  // Add IPS
+
+  $("addIPSButton")
+    ?.addEventListener(
+      "click",
+      tambahSoalIPS
+    );
+
+
+  // Close modal
+
+  $("closeModal")
+    ?.addEventListener(
+      "click",
+      closeModal
+    );
+
+
+  // Save question
+
+  $("questionForm")
+    ?.addEventListener(
+      "submit",
+      saveQuestion
+    );
+
+
+  // Close modal clicking outside
+
+  $("questionModal")
+    ?.addEventListener(
+      "click",
+      event => {
+
+        if (
+          event.target ===
+          $("questionModal")
+        ) {
+
+          closeModal();
+
+        }
+
+      }
+    );
+
+}
 
 
 // =====================================================
-// AUTO TAMBAH SOAL IPS
+// START APPLICATION
 // =====================================================
-//
-// Sengaja TIDAK dipanggil otomatis di sini.
-//
-// Setelah Firebase sudah benar dan website sudah
-// bisa dibuka, abang bisa jalankan dari console:
-//
-// tambahSoalIPS();
-//
-// Jalankan SATU KALI saja.
-// =====================================================
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    setupLoading();
+
+    setupEvents();
+
+    setupAdminLogin();
+
+    initFirebase();
+
+  }
+);
