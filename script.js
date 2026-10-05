@@ -3,8 +3,8 @@
    2) Jalankan supabase.sql di Supabase SQL Editor.
    3) Buat user admin di Authentication > Users.
 */
-const SUPABASE_URL = "GANTI_DENGAN_PROJECT_URL";
-const SUPABASE_PUBLISHABLE_KEY = "GANTI_DENGAN_PUBLISHABLE_KEY";
+const SUPABASE_URL = "https://pvvlyxcyfkqqqoklptqd.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_ZMTwk7G1KQYDzrIvjtWA-A_F8qsw-RJ";
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
