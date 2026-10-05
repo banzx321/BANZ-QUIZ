@@ -3,514 +3,462 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0f172a">
-  <title>BanzQuiz- Tugas Sekolah</title>
+  <title>BANZ QUIZ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- ================= LOADING SCREEN ================= -->
-  <section id="loadingScreen" class="loading-screen">
-    <div class="loading-content">
+<!-- ================= LOADING ================= -->
+<section id="loadingScreen" class="screen active">
+  <div class="loading-box">
 
-      <div class="brand">
-        <div class="brand-icon">E</div>
-        <h1>BanzQuiz</h1>
+    <div class="brand-loading">
+      <div class="logo">BQ</div>
+      <h1>BANZ QUIZ</h1>
+      <p>Platform Quiz Pendidikan</p>
+    </div>
+
+    <div class="video-box">
+      <video id="introVideo" autoplay muted playsinline>
+        <source src="video/loading.mp4" type="video/mp4">
+        Browser Anda tidak mendukung video.
+      </video>
+    </div>
+
+    <div class="loading-info">
+      <div class="progress-container">
+        <div id="loadingProgress"></div>
       </div>
+      <p id="loadingText">Memuat BANZ QUIZ...</p>
+    </div>
 
-      <div class="video-container">
-        <!-- GANTI URL VIDEO DI BAWAH -->
-        <video id="introVideo" autoplay muted playsinline>
-  <source src="loading.mp4" type="video/mp4">
-  Browser Anda tidak mendukung video.
-</video>
-      </div>
+    <button id="skipButton" class="btn btn-outline">
+      Lewati Loading
+    </button>
 
-      <div class="loading-info">
-        <div class="loading-text">
-          <span>Menyiapkan aplikasi...</span>
-          <span id="loadingPercent">0%</span>
+  </div>
+</section>
+
+
+<!-- ================= LOGIN ================= -->
+<section id="loginScreen" class="screen hidden">
+
+  <div class="login-container">
+
+    <div class="login-brand">
+      <div class="logo large">BQ</div>
+      <h1>BANZ QUIZ</h1>
+      <p>Belajar • Berlatih • Berprestasi</p>
+    </div>
+
+    <div id="loginChoice" class="login-card">
+
+      <h2>Masuk ke BANZ QUIZ</h2>
+      <p class="muted">Pilih jenis akun Anda</p>
+
+      <button class="login-option admin-option" onclick="showAdminLogin()">
+        <span class="option-icon">👨‍🏫</span>
+        <div>
+          <strong>Masuk sebagai Admin</strong>
+          <small>Kelola dan tambahkan soal</small>
         </div>
-
-        <div class="progress">
-          <div id="progressBar"></div>
-        </div>
-      </div>
-
-      <button id="skipButton" class="skip-btn">
-        Skip Loading <span>→</span>
       </button>
 
-    </div>
-  </section>
-
-
-  <!-- ================= LOGIN ================= -->
-  <section id="loginScreen" class="screen hidden">
-
-    <div class="login-wrapper">
-
-      <div class="login-brand">
-        <div class="brand-icon large">E</div>
-        <h1>BanzQuiz</h1>
-        <p>Platform ujian digital</p>
-      </div>
-
-      <div class="login-card">
-
-        <div class="card-header">
-          <h2>Selamat Datang 👋</h2>
-          <p>Pilih jenis akun untuk melanjutkan</p>
-        </div>
-
-        <div class="login-options">
-
-          <!-- ADMIN -->
-          <button class="role-card" onclick="showAdminLogin()">
-            <div class="role-icon admin-icon">👨‍🏫</div>
-            <div class="role-info">
-              <h3>Masuk sebagai Admin</h3>
-              <p>Untuk guru & pengelola soal</p>
-            </div>
-            <span class="arrow">→</span>
-          </button>
-
-          <!-- USER -->
-          <button class="role-card" onclick="loginAsUser()">
-            <div class="role-icon user-icon">🎓</div>
-            <div class="role-info">
-              <h3>Masuk sebagai User</h3>
-              <p>Langsung mengerjakan soal</p>
-            </div>
-            <span class="arrow">→</span>
-          </button>
-
-        </div>
-
-      </div>
-
-      <p class="copyright">© 2026 EduQuiz • Digital Learning Platform</p>
-
-    </div>
-  </section>
-
-
-  <!-- ================= ADMIN LOGIN ================= -->
-  <section id="adminLoginScreen" class="screen hidden">
-
-    <div class="login-wrapper">
-
-      <div class="login-card admin-login">
-
-        <button class="back-btn" onclick="backToLogin()">← Kembali</button>
-
-        <div class="card-header">
-          <div class="role-icon admin-icon big">👨‍🏫</div>
-          <h2>Login Admin</h2>
-          <p>Panel khusus guru</p>
-        </div>
-
-        <form id="adminLoginForm">
-
-          <div class="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              id="adminUsername"
-              placeholder="Masukkan username"
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              id="adminPassword"
-              placeholder="Masukkan password"
-              required
-            >
-          </div>
-
-          <div id="loginError" class="error-message"></div>
-
-          <button type="submit" class="primary-btn">
-            Masuk ke Dashboard →
-          </button>
-
-        </form>
-
-        <div class="demo-info">
-          <strong>Demo Login</strong>
-          <p>Username: <b>admin</b></p>
-          <p>Password: <b>admin123</b></p>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ================= ADMIN DASHBOARD ================= -->
-  <section id="adminDashboard" class="dashboard hidden">
-
-    <header class="navbar">
-
-      <div class="nav-brand">
-        <div class="brand-icon">E</div>
-        <span>BanzQuiz <small>ADMIN</small></span>
-      </div>
-
-      <div class="nav-user">
-        <div class="avatar">A</div>
+      <button class="login-option user-option" onclick="loginAsUser()">
+        <span class="option-icon">👨‍🎓</span>
         <div>
-          <strong>Admin / Guru</strong>
-          <small>Administrator</small>
+          <strong>Masuk sebagai User</strong>
+          <small>Kerjakan soal quiz</small>
         </div>
-        <button onclick="logout()" class="logout-btn">Keluar</button>
-      </div>
-
-    </header>
-
-    <main class="dashboard-container">
-
-      <div class="page-title">
-        <div>
-          <span class="eyebrow">ADMIN PANEL</span>
-          <h1>Kelola Soal</h1>
-          <p>Tambahkan dan kelola soal yang akan dikerjakan siswa.</p>
-        </div>
-
-        <button class="primary-btn add-question-btn" onclick="openQuestionModal()">
-          + Tambah Soal
-        </button>
-      </div>
-
-      <div class="stats-grid">
-
-        <div class="stat-card">
-          <div class="stat-icon">📝</div>
-          <div>
-            <span>Total Soal</span>
-            <strong id="totalQuestions">0</strong>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">📚</div>
-          <div>
-            <span>Mata Pelajaran</span>
-            <strong id="totalSubjects">0</strong>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">🎯</div>
-          <div>
-            <span>Status</span>
-            <strong class="online">Aktif</strong>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="questions-section">
-
-        <div class="section-header">
-          <div>
-            <h2>Daftar Soal</h2>
-            <p>Soal yang tersedia untuk siswa</p>
-          </div>
-
-          <select id="subjectFilter" onchange="renderAdminQuestions()">
-            <option value="all">Semua Mata Pelajaran</option>
-          </select>
-        </div>
-
-        <div id="adminQuestionsList" class="admin-question-list"></div>
-
-      </div>
-
-    </main>
-
-  </section>
-
-
-  <!-- ================= USER QUIZ ================= -->
-  <section id="userScreen" class="quiz-screen hidden">
-
-    <header class="quiz-navbar">
-
-      <div class="nav-brand">
-        <div class="brand-icon">E</div>
-        <span>EduQuiz</span>
-      </div>
-
-      <div class="quiz-progress-info">
-        <span>Progress</span>
-        <strong>
-          <span id="currentQuestionNumber">1</span>
-          /
-          <span id="totalQuizQuestions">0</span>
-        </strong>
-      </div>
-
-      <button onclick="logout()" class="logout-btn">Keluar</button>
-
-    </header>
-
-    <main class="quiz-container">
-
-      <div id="noQuestions" class="empty-state hidden">
-        <div class="empty-icon">📚</div>
-        <h2>Belum Ada Soal</h2>
-        <p>Admin belum menambahkan soal.</p>
-        <button onclick="backToLogin()" class="primary-btn">
-          Kembali
-        </button>
-      </div>
-
-      <div id="quizContent">
-
-        <div class="quiz-top">
-
-          <div>
-            <span class="subject-badge" id="quizSubject">
-              Ips
-            </span>
-
-            <span class="question-counter">
-              Soal <span id="questionCounter">1</span>
-            </span>
-          </div>
-
-          <div class="timer">
-            <span>⏱</span>
-            <span id="timer">30:00</span>
-          </div>
-
-        </div>
-
-        <div class="quiz-progress">
-          <div id="quizProgressBar"></div>
-        </div>
-
-        <div class="question-card">
-
-          <div class="question-number">
-            QUESTION <span id="questionIndex">01</span>
-          </div>
-
-          <h2 id="questionText">
-            Loading soal...
-          </h2>
-
-          <div id="answerOptions" class="answer-options"></div>
-
-        </div>
-
-        <div class="quiz-navigation">
-
-          <button
-            id="prevButton"
-            class="secondary-btn"
-            onclick="previousQuestion()"
-          >
-            ← Sebelumnya
-          </button>
-
-          <button
-            id="nextButton"
-            class="primary-btn"
-            onclick="nextQuestion()"
-          >
-            Berikutnya →
-          </button>
-
-        </div>
-
-      </div>
-
-    </main>
-
-  </section>
-
-
-  <!-- ================= RESULT ================= -->
-  <section id="resultScreen" class="screen hidden">
-
-    <div class="result-card">
-
-      <div class="result-icon">🎉</div>
-
-      <span class="eyebrow">UJIAN SELESAI</span>
-
-      <h1>Hasil Ujian</h1>
-
-      <div class="score-circle">
-        <strong id="finalScore">0</strong>
-        <span>/ 100</span>
-      </div>
-
-      <p id="resultMessage">
-        Kerja bagus!
-      </p>
-
-      <div class="result-detail">
-
-        <div>
-          <span>Jumlah Soal</span>
-          <strong id="resultTotal">0</strong>
-        </div>
-
-        <div>
-          <span>Benar</span>
-          <strong id="resultCorrect">0</strong>
-        </div>
-
-        <div>
-          <span>Salah</span>
-          <strong id="resultWrong">0</strong>
-        </div>
-
-      </div>
-
-      <button onclick="backToLogin()" class="primary-btn">
-        Kembali ke Beranda
       </button>
 
     </div>
 
-  </section>
 
+    <!-- ADMIN LOGIN -->
+    <div id="adminLoginCard" class="login-card hidden">
 
-  <!-- ================= QUESTION MODAL ================= -->
-  <div id="questionModal" class="modal hidden">
+      <button class="back-btn" onclick="backToLoginChoice()">
+        ← Kembali
+      </button>
 
-    <div class="modal-overlay" onclick="closeQuestionModal()"></div>
+      <h2>Login Admin</h2>
+      <p class="muted">Masukkan akun admin</p>
 
-    <div class="modal-card">
-
-      <div class="modal-header">
-        <div>
-          <h2 id="modalTitle">Tambah Soal</h2>
-          <p>Buat soal baru untuk siswa</p>
-        </div>
-
-        <button onclick="closeQuestionModal()" class="close-btn">
-          ×
-        </button>
-      </div>
-
-      <form id="questionForm">
-
-        <input type="hidden" id="editQuestionId">
+      <form id="adminLoginForm">
 
         <div class="form-group">
-          <label>Mata Pelajaran</label>
+          <label>Username</label>
           <input
             type="text"
-            id="questionSubject"
-            placeholder="Contoh: Matematika"
+            id="adminUsername"
+            placeholder="Masukkan username"
             required
           >
         </div>
 
         <div class="form-group">
-          <label>Pertanyaan</label>
-          <textarea
-            id="questionInput"
-            rows="4"
-            placeholder="Tuliskan pertanyaan..."
+          <label>Password</label>
+          <input
+            type="password"
+            id="adminPassword"
+            placeholder="Masukkan password"
             required
-          ></textarea>
-        </div>
-
-        <div class="form-row">
-
-          <div class="form-group">
-            <label>Jawaban A</label>
-            <input
-              type="text"
-              id="answerA"
-              placeholder="Jawaban A"
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label>Jawaban B</label>
-            <input
-              type="text"
-              id="answerB"
-              placeholder="Jawaban B"
-              required
-            >
-          </div>
-
-        </div>
-
-        <div class="form-row">
-
-          <div class="form-group">
-            <label>Jawaban C</label>
-            <input
-              type="text"
-              id="answerC"
-              placeholder="Jawaban C"
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label>Jawaban D</label>
-            <input
-              type="text"
-              id="answerD"
-              placeholder="Jawaban D"
-              required
-            >
-          </div>
-
-        </div>
-
-        <div class="form-group">
-          <label>Jawaban yang Benar</label>
-
-          <select id="correctAnswer" required>
-            <option value="">-- Pilih Jawaban --</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-            <option value="D">D</option>
-          </select>
-
-        </div>
-
-        <div class="modal-actions">
-
-          <button
-            type="button"
-            onclick="closeQuestionModal()"
-            class="secondary-btn"
           >
-            Batal
-          </button>
-
-          <button type="submit" class="primary-btn">
-            Simpan Soal
-          </button>
-
         </div>
+
+        <button class="btn btn-primary full" type="submit">
+          Masuk sebagai Admin
+        </button>
+
+        <p id="loginError" class="error-message"></p>
 
       </form>
 
     </div>
+
   </div>
 
+</section>
 
-  <script src="script.js"></script>
+
+<!-- ================= ADMIN ================= -->
+<section id="adminScreen" class="screen hidden">
+
+  <header class="topbar">
+
+    <div class="brand">
+      <div class="logo small">BQ</div>
+      <div>
+        <h2>BANZ QUIZ</h2>
+        <span>Admin Dashboard</span>
+      </div>
+    </div>
+
+    <button class="btn btn-danger" onclick="logout()">
+      Keluar
+    </button>
+
+  </header>
+
+
+  <main class="dashboard">
+
+    <div class="welcome">
+      <div>
+        <h1>Dashboard Admin</h1>
+        <p>Kelola soal BANZ QUIZ dari sini.</p>
+      </div>
+
+      <button class="btn btn-primary" onclick="openQuestionModal()">
+        + Tambah Soal
+      </button>
+    </div>
+
+
+    <!-- STAT -->
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div>
+          <span>Total Soal</span>
+          <strong id="totalQuestions">0</strong>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div>
+          <span>Mata Pelajaran</span>
+          <strong id="totalSubjects">0</strong>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- QUESTIONS -->
+    <div class="content-card">
+
+      <div class="card-header">
+        <div>
+          <h2>Daftar Soal</h2>
+          <p>Soal yang tersimpan di database.</p>
+        </div>
+
+        <select id="subjectFilter" onchange="renderAdminQuestions()">
+          <option value="all">Semua Mata Pelajaran</option>
+        </select>
+      </div>
+
+      <div id="adminQuestions" class="questions-list">
+        <div class="empty-state">
+          Memuat soal...
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+</section>
+
+
+<!-- ================= USER QUIZ ================= -->
+<section id="quizScreen" class="screen hidden">
+
+  <header class="quiz-header">
+
+    <div class="brand">
+      <div class="logo small">BQ</div>
+      <div>
+        <h2>BANZ QUIZ</h2>
+        <span>Quiz Online</span>
+      </div>
+    </div>
+
+    <div class="quiz-actions">
+      <div class="timer">
+        ⏱️ <span id="timer">30:00</span>
+      </div>
+
+      <button class="btn btn-danger" onclick="logout()">
+        Keluar
+      </button>
+    </div>
+
+  </header>
+
+
+  <main class="quiz-container">
+
+    <div class="quiz-top">
+
+      <div>
+        <span id="questionNumber">Soal 1</span>
+        <h1 id="quizSubject">BANZ QUIZ</h1>
+      </div>
+
+      <div class="question-counter">
+        <span id="currentQuestion">1</span>
+        /
+        <span id="questionTotal">0</span>
+      </div>
+
+    </div>
+
+
+    <div class="quiz-card">
+
+      <div class="question-text">
+        <h2 id="questionText">
+          Memuat soal...
+        </h2>
+      </div>
+
+      <div id="answersContainer" class="answers">
+      </div>
+
+    </div>
+
+
+    <div class="quiz-navigation">
+
+      <button
+        id="prevButton"
+        class="btn btn-secondary"
+        onclick="previousQuestion()"
+      >
+        ← Sebelumnya
+      </button>
+
+      <button
+        id="nextButton"
+        class="btn btn-primary"
+        onclick="nextQuestion()"
+      >
+        Berikutnya →
+      </button>
+
+    </div>
+
+  </main>
+
+</section>
+
+
+<!-- ================= RESULT ================= -->
+<section id="resultScreen" class="screen hidden">
+
+  <div class="result-card">
+
+    <div class="result-icon">
+      🏆
+    </div>
+
+    <h1>Quiz Selesai!</h1>
+    <p>Berikut hasil pengerjaan Anda.</p>
+
+    <div class="score">
+      <span id="scoreValue">0</span>
+      <small>Nilai</small>
+    </div>
+
+    <div class="result-info">
+
+      <div>
+        <span>Benar</span>
+        <strong id="correctCount">0</strong>
+      </div>
+
+      <div>
+        <span>Salah</span>
+        <strong id="wrongCount">0</strong>
+      </div>
+
+      <div>
+        <span>Total</span>
+        <strong id="resultTotal">0</strong>
+      </div>
+
+    </div>
+
+    <button class="btn btn-primary full" onclick="loginAsUser()">
+      Kerjakan Lagi
+    </button>
+
+    <button class="btn btn-secondary full" onclick="logout()">
+      Keluar
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ================= MODAL SOAL ================= -->
+<div id="questionModal" class="modal hidden">
+
+  <div class="modal-content">
+
+    <div class="modal-header">
+
+      <div>
+        <h2 id="modalTitle">Tambah Soal</h2>
+        <p>Buat soal baru untuk pengguna.</p>
+      </div>
+
+      <button class="close-btn" onclick="closeQuestionModal()">
+        ×
+      </button>
+
+    </div>
+
+
+    <form id="questionForm">
+
+      <input type="hidden" id="editQuestionId">
+
+      <div class="form-group">
+
+        <label>Mata Pelajaran</label>
+
+        <input
+          type="text"
+          id="questionSubject"
+          placeholder="Contoh: Matematika"
+          required
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>Pertanyaan</label>
+
+        <textarea
+          id="questionInput"
+          rows="4"
+          placeholder="Masukkan pertanyaan..."
+          required
+        ></textarea>
+
+      </div>
+
+
+      <div class="answer-grid">
+
+        <div class="form-group">
+          <label>Jawaban A</label>
+          <input id="answerA" required>
+        </div>
+
+        <div class="form-group">
+          <label>Jawaban B</label>
+          <input id="answerB" required>
+        </div>
+
+        <div class="form-group">
+          <label>Jawaban C</label>
+          <input id="answerC" required>
+        </div>
+
+        <div class="form-group">
+          <label>Jawaban D</label>
+          <input id="answerD" required>
+        </div>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>Jawaban Benar</label>
+
+        <select id="correctAnswer" required>
+          <option value="">Pilih jawaban benar</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+
+      </div>
+
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick="closeQuestionModal()"
+        >
+          Batal
+        </button>
+
+        <button type="submit" class="btn btn-primary">
+          Simpan Soal
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- Firebase -->
+<script type="module" src="script.js"></script>
+
 </body>
-  </html>
+</html>
