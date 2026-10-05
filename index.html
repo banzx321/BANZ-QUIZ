@@ -151,8 +151,43 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Pengaman loading -->
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      const loading = document.getElementById("loadingScreen");
+      const app = document.getElementById("app");
+      const skip = document.getElementById("skipLoading");
+      const video = document.getElementById("introVideo");
+
+      function masukAplikasi() {
+        if (loading) {
+          loading.classList.add("hidden");
+          loading.style.display = "none";
+        }
+
+        if (app) {
+          app.classList.remove("hidden");
+          app.style.display = "";
+        }
+      }
+
+      if (skip) {
+        skip.addEventListener("click", masukAplikasi);
+      }
+
+      if (video) {
+        video.addEventListener("ended", masukAplikasi);
+        video.addEventListener("error", masukAplikasi);
+      }
+
+      // WAJIB: maksimal 2 detik, loading harus hilang
+      setTimeout(masukAplikasi, 2000);
+    });
+  </script>
+
+  <script src="script.js"></script>
   
 </body>
 </html>
