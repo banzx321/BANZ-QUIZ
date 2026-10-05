@@ -1,352 +1,125 @@
-/* =========================================================
-   EDUQUIZ - MAIN JAVASCRIPT
-   ========================================================= */
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  push,
+  set,
+  update,
+  remove,
+  onValue
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
 
-/* ================= DATABASE ================= */
+// =====================================================
+// FIREBASE CONFIG
+// GANTI BAGIAN INI DENGAN CONFIG FIREBASE ABANG
+// =====================================================
 
-const DEFAULT_QUESTIONS = [
-  {
-  id: Date.now() + 1,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Apa kegiatan utama yang dilakukan oleh bank?",
-  answers: {
-    A: "Menghimpun dan menyalurkan dana masyarakat",
-    B: "Menjual barang kebutuhan sehari-hari",
-    C: "Memproduksi kendaraan",
-    D: "Menyediakan jasa transportasi"
-  },
-  correct: "A"
-},
-
-{
-  id: Date.now() + 2,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Bank berperan sebagai perantara keuangan antara...",
-  answers: {
-    A: "Produsen dan konsumen",
-    B: "Pihak yang memiliki dana dan pihak yang membutuhkan dana",
-    C: "Pemerintah dan pedagang",
-    D: "Penjual dan pembeli barang"
-  },
-  correct: "B"
-},
-
-{
-  id: Date.now() + 3,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Lembaga yang bertugas menjaga kestabilan nilai mata uang dan sistem keuangan adalah...",
-  answers: {
-    A: "Bank Umum",
-    B: "Koperasi",
-    C: "Bank Sentral",
-    D: "Pegadaian"
-  },
-  correct: "C"
-},
-
-{
-  id: Date.now() + 4,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Bank sentral yang ada di Indonesia adalah...",
-  answers: {
-    A: "Bank Mandiri",
-    B: "Bank Rakyat Indonesia",
-    C: "Bank Indonesia",
-    D: "Bank Negara Indonesia"
-  },
-  correct: "C"
-},
-
-{
-  id: Date.now() + 5,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Dana yang dihimpun bank dari masyarakat dalam bentuk tabungan, giro, dan deposito disebut...",
-  answers: {
-    A: "Modal",
-    B: "Simpanan",
-    C: "Kredit",
-    D: "Investasi"
-  },
-  correct: "B"
-},
-
-{
-  id: Date.now() + 6,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Dana yang disimpan oleh masyarakat di bank disebut...",
-  answers: {
-    A: "Kredit",
-    B: "Simpanan",
-    C: "Utang",
-    D: "Dividen"
-  },
-  correct: "B"
-},
-
-{
-  id: Date.now() + 7,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Simpanan yang dapat ditarik menggunakan cek atau bilyet giro disebut...",
-  answers: {
-    A: "Tabungan",
-    B: "Deposito",
-    C: "Giro",
-    D: "Kredit"
-  },
-  correct: "C"
-},
-
-{
-  id: Date.now() + 8,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Simpanan yang penarikannya dilakukan pada waktu tertentu sesuai perjanjian disebut...",
-  answers: {
-    A: "Giro",
-    B: "Deposito",
-    C: "Tabungan",
-    D: "Kredit"
-  },
-  correct: "B"
-},
-
-{
-  id: Date.now() + 9,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Dana yang dipinjamkan oleh bank kepada masyarakat disebut...",
-  answers: {
-    A: "Kredit",
-    B: "Simpanan",
-    C: "Deposito",
-    D: "Modal"
-  },
-  correct: "A"
-},
-
-{
-  id: Date.now() + 10,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Imbalan yang diberikan bank kepada nasabah atas simpanannya disebut...",
-  answers: {
-    A: "Pajak",
-    B: "Bunga",
-    C: "Denda",
-    D: "Dividen"
-  },
-  correct: "B"
-},
-
-{
-  id: Date.now() + 11,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Lembaga yang bertugas menjamin simpanan nasabah bank adalah...",
-  answers: {
-    A: "OJK",
-    B: "Bank Indonesia",
-    C: "LPS",
-    D: "Kementerian Keuangan"
-  },
-  correct: "C"
-},
-
-{
-  id: Date.now() + 12,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "OJK merupakan singkatan dari...",
-  answers: {
-    A: "Otoritas Jasa Keuangan",
-    B: "Organisasi Jasa Keuangan",
-    C: "Otoritas Jaminan Keuangan",
-    D: "Organisasi Jaminan Keuangan"
-  },
-  correct: "A"
-},
-
-{
-  id: Date.now() + 13,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Salah satu tugas OJK adalah...",
-  answers: {
-    A: "Mencetak uang rupiah",
-    B: "Mengatur dan mengawasi sektor jasa keuangan",
-    C: "Menjual saham perusahaan",
-    D: "Memberikan bantuan sosial"
-  },
-  correct: "B"
-},
-
-{
-  id: Date.now() + 14,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Lembaga keuangan yang memberikan pinjaman dengan menggunakan barang sebagai jaminan adalah...",
-  answers: {
-    A: "Pegadaian",
-    B: "Bursa Efek",
-    C: "Bank Indonesia",
-    D: "Perusahaan asuransi"
-  },
-  correct: "A"
-},
-
-{
-  id: Date.now() + 15,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Koperasi simpan pinjam memiliki kegiatan utama berupa...",
-  answers: {
-    A: "Menjual barang elektronik",
-    B: "Menghimpun dan memberikan pinjaman kepada anggota",
-    C: "Mencetak uang",
-    D: "Mengelola pasar modal"
-  },
-  correct: "B"
-},
-
-{
-  id: Date.now() + 16,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Lembaga keuangan yang memberikan perlindungan terhadap risiko tertentu disebut...",
-  answers: {
-    A: "Perusahaan asuransi",
-    B: "Pegadaian",
-    C: "Koperasi",
-    D: "Bursa efek"
-  },
-  correct: "A"
-},
-
-{
-  id: Date.now() + 17,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Berikut yang merupakan contoh lembaga keuangan non-bank adalah...",
-  answers: {
-    A: "Bank Indonesia",
-    B: "Bank Umum",
-    C: "Pegadaian",
-    D: "Bank Perkreditan Rakyat"
-  },
-  correct: "C"
-},
-
-{
-  id: Date.now() + 18,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Pasar modal merupakan tempat bertemunya...",
-  answers: {
-    A: "Penjual dan pembeli kebutuhan pokok",
-    B: "Pihak yang membutuhkan dana dan investor",
-    C: "Petani dan pedagang",
-    D: "Produsen dan distributor"
-  },
-  correct: "B"
-},
-
-{
-  id: Date.now() + 19,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Surat berharga yang menunjukkan kepemilikan seseorang terhadap suatu perusahaan disebut...",
-  answers: {
-    A: "Saham",
-    B: "Cek",
-    C: "Giro",
-    D: "Deposito"
-  },
-  correct: "A"
-},
-
-{
-  id: Date.now() + 20,
-  subject: "Bank dan Lembaga Keuangan",
-  question: "Apa tujuan utama adanya lembaga keuangan?",
-  answers: {
-    A: "Mempermudah kegiatan dan pelayanan keuangan masyarakat",
-    B: "Mengurangi jumlah uang beredar tanpa alasan",
-    C: "Menghapus kegiatan perdagangan",
-    D: "Menggantikan seluruh kegiatan pemerintah"
-  },
-  correct: "A"
-}
-];
+const firebaseConfig = {
+  apiKey: "Banz...",
+  authDomain: "banz-quiz.firebaseapp.com",
+  databaseURL: "https://banz-quiz-default-rtdb.firebaseio.com",
+  projectId: "banz-quiz",
+  storageBucket: "banz-quiz.firebasestorage.app",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef"
+};
 
 
-function getQuestions() {
-  const saved = localStorage.getItem("eduquiz_questions");
+// =====================================================
+// FIREBASE
+// =====================================================
 
-  if (saved) {
-    return JSON.parse(saved);
-  }
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
-  localStorage.setItem(
-    "eduquiz_questions",
-    JSON.stringify(DEFAULT_QUESTIONS)
-  );
-
-  return DEFAULT_QUESTIONS;
-}
+const questionsRef = ref(database, "questions");
 
 
-function saveQuestions(questions) {
-  localStorage.setItem(
-    "eduquiz_questions",
-    JSON.stringify(questions)
-  );
-}
+// =====================================================
+// GLOBAL VARIABLE
+// =====================================================
+
+let questions = [];
+
+let currentQuestionIndex = 0;
+
+let userAnswers = {};
+
+let timerInterval = null;
+
+let timeLeft = 30 * 60;
+
+let editingQuestionId = null;
 
 
-/* ================= SCREEN MANAGEMENT ================= */
+// =====================================================
+// ELEMENT
+// =====================================================
 
-const screens = [
-  "loginScreen",
-  "adminLoginScreen",
-  "adminDashboard",
-  "userScreen",
-  "resultScreen"
-];
+const loadingScreen =
+  document.getElementById("loadingScreen");
 
+const loginScreen =
+  document.getElementById("loginScreen");
 
-function hideAllScreens() {
-  screens.forEach(id => {
-    document.getElementById(id).classList.add("hidden");
-  });
-}
+const adminScreen =
+  document.getElementById("adminScreen");
 
+const quizScreen =
+  document.getElementById("quizScreen");
 
-function showScreen(id) {
-  hideAllScreens();
-  document.getElementById(id).classList.remove("hidden");
-  window.scrollTo(0, 0);
-}
+const resultScreen =
+  document.getElementById("resultScreen");
 
 
-/* ================= LOADING ================= */
+// =====================================================
+// LOADING
+// =====================================================
 
 let loadingProgress = 0;
-let loadingFinished = false;
 
-const progressBar = document.getElementById("progressBar");
-const loadingPercent = document.getElementById("loadingPercent");
-const loadingScreen = document.getElementById("loadingScreen");
-const introVideo = document.getElementById("introVideo");
+const progressBar =
+  document.getElementById("loadingProgress");
+
+const loadingText =
+  document.getElementById("loadingText");
+
+const introVideo =
+  document.getElementById("introVideo");
+
+const skipButton =
+  document.getElementById("skipButton");
 
 
-function updateLoading() {
+function startLoading() {
 
-  if (loadingFinished) return;
+  const interval = setInterval(() => {
 
-  loadingProgress += Math.random() * 3 + 1;
+    loadingProgress += 2;
 
-  if (loadingProgress >= 100) {
-    loadingProgress = 100;
-    loadingFinished = true;
-  }
+    if (loadingProgress >= 100) {
 
-  progressBar.style.width = `${loadingProgress}%`;
-  loadingPercent.textContent = `${Math.floor(loadingProgress)}%`;
+      loadingProgress = 100;
 
-  if (!loadingFinished) {
-    setTimeout(updateLoading, 100);
-  } else {
-    setTimeout(skipLoading, 500);
-  }
+      clearInterval(interval);
+
+      setTimeout(() => {
+        showLogin();
+      }, 500);
+
+    }
+
+    progressBar.style.width =
+      loadingProgress + "%";
+
+    loadingText.textContent =
+      `Memuat BANZ QUIZ... ${loadingProgress}%`;
+
+  }, 60);
 }
 
 
@@ -356,44 +129,79 @@ function skipLoading() {
     introVideo.pause();
   }
 
-  loadingScreen.classList.add("hide");
-
-  setTimeout(() => {
-    loadingScreen.style.display = "none";
-    showScreen("loginScreen");
-  }, 600);
+  showLogin();
 }
 
 
-document
-  .getElementById("skipButton")
-  .addEventListener("click", skipLoading);
+skipButton.addEventListener(
+  "click",
+  skipLoading
+);
 
 
-window.addEventListener("load", () => {
-  updateLoading();
-});
+function showLogin() {
+
+  loadingScreen.classList.add("hidden");
+
+  loginScreen.classList.remove("hidden");
+
+  adminScreen.classList.add("hidden");
+
+  quizScreen.classList.add("hidden");
+
+  resultScreen.classList.add("hidden");
+}
 
 
-/* ================= LOGIN ================= */
+startLoading();
+
+
+// =====================================================
+// LOGIN
+// =====================================================
 
 function showAdminLogin() {
-  showScreen("adminLoginScreen");
+
+  document
+    .getElementById("loginChoice")
+    .classList.add("hidden");
+
+  document
+    .getElementById("adminLoginCard")
+    .classList.remove("hidden");
+
 }
 
 
-function backToLogin() {
-  clearInterval(timerInterval);
+window.showAdminLogin = showAdminLogin;
 
-  showScreen("loginScreen");
+
+function backToLoginChoice() {
+
+  document
+    .getElementById("adminLoginCard")
+    .classList.add("hidden");
+
+  document
+    .getElementById("loginChoice")
+    .classList.remove("hidden");
+
 }
 
+
+window.backToLoginChoice =
+  backToLoginChoice;
+
+
+// =====================================================
+// ADMIN LOGIN
+// =====================================================
 
 document
   .getElementById("adminLoginForm")
-  .addEventListener("submit", function(e) {
+  .addEventListener("submit", function(event) {
 
-    e.preventDefault();
+    event.preventDefault();
 
     const username =
       document.getElementById("adminUsername").value.trim();
@@ -405,16 +213,33 @@ document
       document.getElementById("loginError");
 
 
-    if (username === "admin" && password === "admin123") {
+    /*
+      MASUKKAN LOGIN ADMIN ABANG DI SINI.
+
+      Contoh:
+      username = admin
+      password = password admin
+
+      Tidak ditampilkan di halaman.
+    */
+
+    const ADMIN_USERNAME = "admin";
+
+    const ADMIN_PASSWORD = "GANTI_PASSWORD_ADMIN";
+
+
+    if (
+      username === ADMIN_USERNAME &&
+      password === ADMIN_PASSWORD
+    ) {
 
       error.textContent = "";
 
-      sessionStorage.setItem(
-        "eduquiz_role",
-        "admin"
-      );
+      document
+        .getElementById("adminLoginForm")
+        .reset();
 
-      openAdminDashboard();
+      showAdmin();
 
     } else {
 
@@ -422,148 +247,137 @@ document
         "Username atau password salah.";
 
     }
+
   });
 
 
+// =====================================================
+// SHOW ADMIN
+// =====================================================
+
+function showAdmin() {
+
+  loginScreen.classList.add("hidden");
+
+  adminScreen.classList.remove("hidden");
+
+  quizScreen.classList.add("hidden");
+
+  resultScreen.classList.add("hidden");
+
+  renderAdminQuestions();
+
+}
+
+
+window.showAdmin =
+  showAdmin;
+
+
+// =====================================================
+// USER LOGIN
+// =====================================================
+
 function loginAsUser() {
 
-  sessionStorage.setItem(
-    "eduquiz_role",
-    "user"
-  );
+  loginScreen.classList.add("hidden");
 
-  startQuiz();
+  adminScreen.classList.add("hidden");
+
+  resultScreen.classList.add("hidden");
+
+  quizScreen.classList.remove("hidden");
+
+  currentQuestionIndex = 0;
+
+  userAnswers = {};
+
+  timeLeft = 30 * 60;
+
+  startTimer();
+
+  renderQuiz();
+
 }
 
 
-/* ================= LOGOUT ================= */
-
-function logout() {
-
-  clearInterval(timerInterval);
-
-  sessionStorage.removeItem("eduquiz_role");
-
-  showScreen("loginScreen");
-}
+window.loginAsUser =
+  loginAsUser;
 
 
-/* ================= ADMIN ================= */
+// =====================================================
+// FIREBASE REALTIME DATABASE
+// =====================================================
 
-function openAdminDashboard() {
+onValue(questionsRef, (snapshot) => {
 
-  showScreen("adminDashboard");
+  const data = snapshot.val();
+
+  if (!data) {
+
+    questions = [];
+
+  } else {
+
+    questions = Object.entries(data).map(
+      ([id, question]) => ({
+        id,
+        ...question
+      })
+    );
+
+  }
+
 
   updateAdminStats();
 
   updateSubjectFilter();
 
-  renderAdminQuestions();
-}
 
+  if (
+    !quizScreen.classList.contains("hidden")
+  ) {
+
+    renderQuiz();
+
+  }
+
+});
+
+
+// =====================================================
+// ADMIN STATS
+// =====================================================
 
 function updateAdminStats() {
-
-  const questions = getQuestions();
-
-  const subjects = [
-    ...new Set(
-      questions.map(q => q.subject)
-    )
-  ];
 
   document.getElementById(
     "totalQuestions"
   ).textContent = questions.length;
 
+
+  const subjects = new Set(
+    questions.map(q => q.subject)
+  );
+
   document.getElementById(
     "totalSubjects"
-  ).textContent = subjects.length;
+  ).textContent = subjects.size;
+
 }
 
 
-/* ================= QUESTION LIST ================= */
-
-function renderAdminQuestions() {
-
-  const questions = getQuestions();
-
-  const filter =
-    document.getElementById("subjectFilter").value;
-
-  const list =
-    document.getElementById("adminQuestionsList");
-
-  const filtered =
-    filter === "all"
-      ? questions
-      : questions.filter(q => q.subject === filter);
-
-
-  if (filtered.length === 0) {
-
-    list.innerHTML = `
-      <div class="empty-list">
-        <div>📚</div>
-        <p>Belum ada soal.</p>
-      </div>
-    `;
-
-    return;
-  }
-
-
-  list.innerHTML = filtered.map((q, index) => `
-
-    <div class="admin-question">
-
-      <div class="question-info">
-
-        <span class="subject">
-          ${escapeHTML(q.subject)}
-        </span>
-
-        <h3>
-          ${index + 1}. ${escapeHTML(q.question)}
-        </h3>
-
-      </div>
-
-      <div class="question-actions">
-
-        <button
-          class="edit-btn"
-          onclick="editQuestion(${q.id})"
-        >
-          Edit
-        </button>
-
-        <button
-          class="delete-btn"
-          onclick="deleteQuestion(${q.id})"
-        >
-          Hapus
-        </button>
-
-      </div>
-
-    </div>
-
-  `).join("");
-}
-
-
-/* ================= SUBJECT FILTER ================= */
+// =====================================================
+// SUBJECT FILTER
+// =====================================================
 
 function updateSubjectFilter() {
 
-  const select =
+  const filter =
     document.getElementById("subjectFilter");
 
-  const current =
-    select.value || "all";
-
-  const questions = getQuestions();
+  const currentValue =
+    filter.value;
 
   const subjects = [
     ...new Set(
@@ -572,11 +386,12 @@ function updateSubjectFilter() {
   ];
 
 
-  select.innerHTML = `
+  filter.innerHTML = `
     <option value="all">
       Semua Mata Pelajaran
     </option>
   `;
+
 
   subjects.forEach(subject => {
 
@@ -584,168 +399,311 @@ function updateSubjectFilter() {
       document.createElement("option");
 
     option.value = subject;
+
     option.textContent = subject;
 
-    select.appendChild(option);
+    filter.appendChild(option);
 
   });
 
 
   if (
-    subjects.includes(current)
+    subjects.includes(currentValue)
   ) {
-    select.value = current;
+
+    filter.value = currentValue;
+
   }
+
 }
 
 
-/* ================= ADD QUESTION ================= */
+// =====================================================
+// RENDER ADMIN QUESTIONS
+// =====================================================
+
+function renderAdminQuestions() {
+
+  const container =
+    document.getElementById("adminQuestions");
+
+  const filter =
+    document.getElementById("subjectFilter").value;
+
+
+  let filteredQuestions =
+    questions;
+
+
+  if (filter !== "all") {
+
+    filteredQuestions =
+      questions.filter(
+        q => q.subject === filter
+      );
+
+  }
+
+
+  if (filteredQuestions.length === 0) {
+
+    container.innerHTML = `
+      <div class="empty-state">
+        Belum ada soal.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    filteredQuestions.map(q => `
+
+      <div class="question-admin-card">
+
+        <div class="question-meta">
+          ${escapeHTML(q.subject)}
+        </div>
+
+        <h3>
+          ${escapeHTML(q.question)}
+        </h3>
+
+        <div class="admin-answers">
+
+          <div class="admin-answer ${q.correct === "A" ? "correct" : ""}">
+            <b>A.</b> ${escapeHTML(q.answers.A)}
+          </div>
+
+          <div class="admin-answer ${q.correct === "B" ? "correct" : ""}">
+            <b>B.</b> ${escapeHTML(q.answers.B)}
+          </div>
+
+          <div class="admin-answer ${q.correct === "C" ? "correct" : ""}">
+            <b>C.</b> ${escapeHTML(q.answers.C)}
+          </div>
+
+          <div class="admin-answer ${q.correct === "D" ? "correct" : ""}">
+            <b>D.</b> ${escapeHTML(q.answers.D)}
+          </div>
+
+        </div>
+
+        <div class="question-actions">
+
+          <button
+            class="action-btn edit-btn"
+            onclick="editQuestion('${q.id}')"
+          >
+            Edit
+          </button>
+
+          <button
+            class="action-btn delete-btn"
+            onclick="deleteQuestion('${q.id}')"
+          >
+            Hapus
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+window.renderAdminQuestions =
+  renderAdminQuestions;
+
+
+// =====================================================
+// ADD QUESTION MODAL
+// =====================================================
 
 function openQuestionModal() {
 
-  document.getElementById(
-    "questionModal"
-  ).classList.remove("hidden");
+  editingQuestionId = null;
 
   document.getElementById(
     "modalTitle"
   ).textContent = "Tambah Soal";
 
-  document.getElementById(
-    "questionForm"
-  ).reset();
+
+  document
+    .getElementById("questionForm")
+    .reset();
+
 
   document.getElementById(
     "editQuestionId"
   ).value = "";
 
+
+  document
+    .getElementById("questionModal")
+    .classList.remove("hidden");
+
 }
 
+
+window.openQuestionModal =
+  openQuestionModal;
+
+
+// =====================================================
+// CLOSE MODAL
+// =====================================================
 
 function closeQuestionModal() {
 
-  document.getElementById(
-    "questionModal"
-  ).classList.add("hidden");
+  document
+    .getElementById("questionModal")
+    .classList.add("hidden");
+
+  editingQuestionId = null;
 
 }
 
 
+window.closeQuestionModal =
+  closeQuestionModal;
+
+
+// =====================================================
+// SAVE QUESTION
+// =====================================================
+
 document
   .getElementById("questionForm")
-  .addEventListener("submit", function(e) {
+  .addEventListener("submit", async function(event) {
 
-    e.preventDefault();
+    event.preventDefault();
 
 
-    const editId =
+    const subject =
       document.getElementById(
-        "editQuestionId"
+        "questionSubject"
+      ).value.trim();
+
+
+    const question =
+      document.getElementById(
+        "questionInput"
+      ).value.trim();
+
+
+    const answers = {
+
+      A: document.getElementById(
+        "answerA"
+      ).value.trim(),
+
+      B: document.getElementById(
+        "answerB"
+      ).value.trim(),
+
+      C: document.getElementById(
+        "answerC"
+      ).value.trim(),
+
+      D: document.getElementById(
+        "answerD"
+      ).value.trim()
+
+    };
+
+
+    const correct =
+      document.getElementById(
+        "correctAnswer"
       ).value;
 
 
     const questionData = {
 
-      id: editId
-        ? Number(editId)
-        : Date.now(),
+      subject,
+      question,
+      answers,
+      correct,
 
-      subject:
-        document.getElementById(
-          "questionSubject"
-        ).value.trim(),
-
-      question:
-        document.getElementById(
-          "questionInput"
-        ).value.trim(),
-
-      answers: {
-
-        A:
-          document.getElementById(
-            "answerA"
-          ).value.trim(),
-
-        B:
-          document.getElementById(
-            "answerB"
-          ).value.trim(),
-
-        C:
-          document.getElementById(
-            "answerC"
-          ).value.trim(),
-
-        D:
-          document.getElementById(
-            "answerD"
-          ).value.trim()
-
-      },
-
-      correct:
-        document.getElementById(
-          "correctAnswer"
-        ).value
+      createdAt:
+        Date.now()
 
     };
 
 
-    let questions = getQuestions();
+    try {
 
+      if (editingQuestionId) {
 
-    if (editId) {
+        const questionRef =
+          ref(
+            database,
+            `questions/${editingQuestionId}`
+          );
 
-      questions =
-        questions.map(q =>
-          q.id === Number(editId)
-            ? questionData
-            : q
+        await update(
+          questionRef,
+          questionData
         );
 
-    } else {
+        alert("Soal berhasil diperbarui.");
 
-      questions.push(questionData);
+      } else {
+
+        const newQuestionRef =
+          push(questionsRef);
+
+        await set(
+          newQuestionRef,
+          questionData
+        );
+
+        alert(
+          "Soal berhasil ditambahkan dan akan terlihat oleh user."
+        );
+
+      }
+
+
+      closeQuestionModal();
+
+      renderAdminQuestions();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Gagal menyimpan soal. Periksa koneksi Firebase."
+      );
 
     }
-
-
-    saveQuestions(questions);
-
-    closeQuestionModal();
-
-    updateAdminStats();
-
-    updateSubjectFilter();
-
-    renderAdminQuestions();
-
-
-    alert(
-      editId
-        ? "Soal berhasil diperbarui."
-        : "Soal berhasil ditambahkan."
-    );
 
   });
 
 
-/* ================= EDIT QUESTION ================= */
+// =====================================================
+// EDIT QUESTION
+// =====================================================
 
 function editQuestion(id) {
 
-  const questions = getQuestions();
-
-  const q =
-    questions.find(item => item.id === id);
-
-  if (!q) return;
+  const question =
+    questions.find(
+      q => q.id === id
+    );
 
 
-  document.getElementById(
-    "questionModal"
-  ).classList.remove("hidden");
+  if (!question) return;
+
+
+  editingQuestionId = id;
 
 
   document.getElementById(
@@ -754,293 +712,255 @@ function editQuestion(id) {
 
 
   document.getElementById(
-    "editQuestionId"
-  ).value = q.id;
-
-
-  document.getElementById(
     "questionSubject"
-  ).value = q.subject;
+  ).value = question.subject;
 
 
   document.getElementById(
     "questionInput"
-  ).value = q.question;
+  ).value = question.question;
 
 
   document.getElementById(
     "answerA"
-  ).value = q.answers.A;
+  ).value = question.answers.A;
 
 
   document.getElementById(
     "answerB"
-  ).value = q.answers.B;
+  ).value = question.answers.B;
 
 
   document.getElementById(
     "answerC"
-  ).value = q.answers.C;
+  ).value = question.answers.C;
 
 
   document.getElementById(
     "answerD"
-  ).value = q.answers.D;
+  ).value = question.answers.D;
 
 
   document.getElementById(
     "correctAnswer"
-  ).value = q.correct;
+  ).value = question.correct;
+
+
+  document
+    .getElementById("questionModal")
+    .classList.remove("hidden");
 
 }
 
 
-/* ================= DELETE QUESTION ================= */
+window.editQuestion =
+  editQuestion;
 
-function deleteQuestion(id) {
+
+// =====================================================
+// DELETE QUESTION
+// =====================================================
+
+async function deleteQuestion(id) {
 
   const confirmDelete =
     confirm(
       "Apakah Anda yakin ingin menghapus soal ini?"
     );
 
+
   if (!confirmDelete) return;
 
 
-  let questions = getQuestions();
+  try {
 
-  questions =
-    questions.filter(
-      q => q.id !== id
+    const questionRef =
+      ref(
+        database,
+        `questions/${id}`
+      );
+
+    await remove(questionRef);
+
+    alert("Soal berhasil dihapus.");
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Gagal menghapus soal."
     );
 
-  saveQuestions(questions);
-
-  updateAdminStats();
-
-  updateSubjectFilter();
-
-  renderAdminQuestions();
+  }
 
 }
 
 
-/* =========================================================
-   QUIZ SYSTEM
-   ========================================================= */
-
-let quizQuestions = [];
-let currentQuestion = 0;
-let userAnswers = {};
-let timerInterval;
-let timeRemaining = 30 * 60;
+window.deleteQuestion =
+  deleteQuestion;
 
 
-/* ================= START QUIZ ================= */
+// =====================================================
+// QUIZ
+// =====================================================
 
-function startQuiz() {
+function renderQuiz() {
 
-  quizQuestions = getQuestions();
+  if (questions.length === 0) {
 
-  currentQuestion = 0;
+    document.getElementById(
+      "questionText"
+    ).textContent =
+      "Belum ada soal yang tersedia.";
 
-  userAnswers = {};
+    document.getElementById(
+      "answersContainer"
+    ).innerHTML = "";
 
-  timeRemaining = 30 * 60;
-
-
-  showScreen("userScreen");
-
-
-  if (quizQuestions.length === 0) {
-
-    document
-      .getElementById("quizContent")
-      .classList.add("hidden");
-
-    document
-      .getElementById("noQuestions")
-      .classList.remove("hidden");
+    document.getElementById(
+      "questionTotal"
+    ).textContent = "0";
 
     return;
 
   }
 
 
-  document
-    .getElementById("quizContent")
-    .classList.remove("hidden");
+  if (
+    currentQuestionIndex >= questions.length
+  ) {
 
-  document
-    .getElementById("noQuestions")
-    .classList.add("hidden");
+    currentQuestionIndex =
+      questions.length - 1;
 
-
-  document.getElementById(
-    "totalQuizQuestions"
-  ).textContent =
-    quizQuestions.length;
+  }
 
 
-  renderQuestion();
-
-  startTimer();
-
-}
-
-
-/* ================= RENDER QUESTION ================= */
-
-function renderQuestion() {
-
-  const q =
-    quizQuestions[currentQuestion];
+  const question =
+    questions[currentQuestionIndex];
 
 
   document.getElementById(
-    "currentQuestionNumber"
+    "questionNumber"
   ).textContent =
-    currentQuestion + 1;
+    `Soal ${currentQuestionIndex + 1}`;
 
 
   document.getElementById(
-    "questionCounter"
+    "currentQuestion"
   ).textContent =
-    `${currentQuestion + 1} / ${quizQuestions.length}`;
+    currentQuestionIndex + 1;
 
 
   document.getElementById(
-    "questionIndex"
+    "questionTotal"
   ).textContent =
-    String(currentQuestion + 1)
-      .padStart(2, "0");
+    questions.length;
 
 
   document.getElementById(
     "quizSubject"
   ).textContent =
-    q.subject;
+    question.subject;
 
 
   document.getElementById(
     "questionText"
   ).textContent =
-    q.question;
+    question.question;
 
 
-  const options =
+  const container =
     document.getElementById(
-      "answerOptions"
+      "answersContainer"
     );
 
 
-  options.innerHTML = "";
+  container.innerHTML = "";
 
 
   ["A", "B", "C", "D"].forEach(letter => {
 
-    const option =
-      document.createElement("div");
+    const button =
+      document.createElement("button");
 
-    option.className =
-      "answer-option";
+
+    button.className =
+      "answer";
 
 
     if (
-      userAnswers[currentQuestion] ===
-      letter
+      userAnswers[question.id] === letter
     ) {
-      option.classList.add("selected");
+
+      button.classList.add("selected");
+
     }
 
 
-    option.innerHTML = `
+    button.innerHTML = `
 
-      <div class="answer-letter">
+      <span class="answer-letter">
         ${letter}
-      </div>
+      </span>
 
-      <div class="answer-text">
-        ${escapeHTML(q.answers[letter])}
-      </div>
+      <span>
+        ${escapeHTML(question.answers[letter])}
+      </span>
 
     `;
 
 
-    option.addEventListener(
-      "click",
-      () => selectAnswer(letter)
-    );
+    button.onclick = () => {
+
+      userAnswers[question.id] =
+        letter;
+
+      renderQuiz();
+
+    };
 
 
-    options.appendChild(option);
+    container.appendChild(button);
 
   });
-
-
-  const progress =
-    ((currentQuestion + 1) /
-      quizQuestions.length) * 100;
-
-
-  document.getElementById(
-    "quizProgressBar"
-  ).style.width =
-    `${progress}%`;
 
 
   document.getElementById(
     "prevButton"
   ).disabled =
-    currentQuestion === 0;
+    currentQuestionIndex === 0;
 
 
-  if (
-    currentQuestion ===
-    quizQuestions.length - 1
-  ) {
-
-    document.getElementById(
-      "nextButton"
-    ).textContent =
-      "Selesai ✓";
-
-  } else {
-
-    document.getElementById(
-      "nextButton"
-    ).textContent =
-      "Berikutnya →";
-
-  }
+  document.getElementById(
+    "nextButton"
+  ).textContent =
+    currentQuestionIndex === questions.length - 1
+      ? "Selesai ✓"
+      : "Berikutnya →";
 
 }
 
 
-/* ================= SELECT ANSWER ================= */
-
-function selectAnswer(letter) {
-
-  userAnswers[currentQuestion] =
-    letter;
-
-  renderQuestion();
-
-}
+window.renderQuiz =
+  renderQuiz;
 
 
-/* ================= NEXT ================= */
+// =====================================================
+// NEXT
+// =====================================================
 
 function nextQuestion() {
 
   if (
-    currentQuestion <
-    quizQuestions.length - 1
+    currentQuestionIndex <
+    questions.length - 1
   ) {
 
-    currentQuestion++;
+    currentQuestionIndex++;
 
-    renderQuestion();
+    renderQuiz();
 
   } else {
 
@@ -1051,73 +971,34 @@ function nextQuestion() {
 }
 
 
-/* ================= PREVIOUS ================= */
+window.nextQuestion =
+  nextQuestion;
+
+
+// =====================================================
+// PREVIOUS
+// =====================================================
 
 function previousQuestion() {
 
-  if (currentQuestion > 0) {
+  if (currentQuestionIndex > 0) {
 
-    currentQuestion--;
+    currentQuestionIndex--;
 
-    renderQuestion();
+    renderQuiz();
 
   }
 
 }
 
 
-/* ================= TIMER ================= */
-
-function startTimer() {
-
-  clearInterval(timerInterval);
+window.previousQuestion =
+  previousQuestion;
 
 
-  updateTimer();
-
-
-  timerInterval =
-    setInterval(() => {
-
-      timeRemaining--;
-
-      updateTimer();
-
-
-      if (timeRemaining <= 0) {
-
-        clearInterval(timerInterval);
-
-        finishQuiz();
-
-      }
-
-    }, 1000);
-
-}
-
-
-function updateTimer() {
-
-  const minutes =
-    Math.floor(
-      timeRemaining / 60
-    );
-
-  const seconds =
-    timeRemaining % 60;
-
-
-  document.getElementById(
-    "timer"
-  ).textContent =
-
-    `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-
-}
-
-
-/* ================= FINISH QUIZ ================= */
+// =====================================================
+// FINISH QUIZ
+// =====================================================
 
 function finishQuiz() {
 
@@ -1127,22 +1008,22 @@ function finishQuiz() {
   let correct = 0;
 
 
-  quizQuestions.forEach(
-    (question, index) => {
+  questions.forEach(question => {
 
-      if (
-        userAnswers[index] ===
-        question.correct
-      ) {
-        correct++;
-      }
+    if (
+      userAnswers[question.id] ===
+      question.correct
+    ) {
+
+      correct++;
 
     }
-  );
+
+  });
 
 
   const total =
-    quizQuestions.length;
+    questions.length;
 
 
   const wrong =
@@ -1158,124 +1039,134 @@ function finishQuiz() {
 
 
   document.getElementById(
-    "finalScore"
-  ).textContent =
-    score;
+    "scoreValue"
+  ).textContent = score;
+
+
+  document.getElementById(
+    "correctCount"
+  ).textContent = correct;
+
+
+  document.getElementById(
+    "wrongCount"
+  ).textContent = wrong;
 
 
   document.getElementById(
     "resultTotal"
-  ).textContent =
-    total;
+  ).textContent = total;
 
 
-  document.getElementById(
-    "resultCorrect"
-  ).textContent =
-    correct;
+  quizScreen.classList.add("hidden");
 
-
-  document.getElementById(
-    "resultWrong"
-  ).textContent =
-    wrong;
-
-
-  let message;
-
-
-  if (score >= 90) {
-
-    message =
-      "Luar biasa! Hasil kamu sangat bagus. 🏆";
-
-  } else if (score >= 75) {
-
-    message =
-      "Bagus sekali! Terus pertahankan. 🎉";
-
-  } else if (score >= 60) {
-
-    message =
-      "Cukup baik. Terus belajar dan tingkatkan lagi! 💪";
-
-  } else {
-
-    message =
-      "Jangan menyerah. Tetap semangat belajar! 📚";
-
-  }
-
-
-  document.getElementById(
-    "resultMessage"
-  ).textContent =
-    message;
-
-
-  showScreen("resultScreen");
+  resultScreen.classList.remove("hidden");
 
 }
 
 
-/* ================= SECURITY / HTML ================= */
+window.finishQuiz =
+  finishQuiz;
+
+
+// =====================================================
+// TIMER
+// =====================================================
+
+function startTimer() {
+
+  clearInterval(timerInterval);
+
+
+  updateTimer();
+
+
+  timerInterval =
+    setInterval(() => {
+
+      timeLeft--;
+
+
+      updateTimer();
+
+
+      if (timeLeft <= 0) {
+
+        clearInterval(timerInterval);
+
+        finishQuiz();
+
+      }
+
+    }, 1000);
+
+}
+
+
+function updateTimer() {
+
+  const minutes =
+    Math.floor(timeLeft / 60)
+      .toString()
+      .padStart(2, "0");
+
+
+  const seconds =
+    (timeLeft % 60)
+      .toString()
+      .padStart(2, "0");
+
+
+  document.getElementById(
+    "timer"
+  ).textContent =
+    `${minutes}:${seconds}`;
+
+}
+
+
+// =====================================================
+// LOGOUT
+// =====================================================
+
+function logout() {
+
+  clearInterval(timerInterval);
+
+  loginScreen.classList.remove("hidden");
+
+  adminScreen.classList.add("hidden");
+
+  quizScreen.classList.add("hidden");
+
+  resultScreen.classList.add("hidden");
+
+  document.getElementById(
+    "loginChoice"
+  ).classList.remove("hidden");
+
+  document.getElementById(
+    "adminLoginCard"
+  ).classList.add("hidden");
+
+}
+
+
+window.logout =
+  logout;
+
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
 
 function escapeHTML(value) {
 
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 }
-
-
-/* ================= KEYBOARD ================= */
-
-document.addEventListener(
-  "keydown",
-  function(e) {
-
-    if (
-      document
-        .getElementById("userScreen")
-        .classList.contains("hidden")
-    ) {
-      return;
-    }
-
-
-    if (e.key === "ArrowRight") {
-      nextQuestion();
-    }
-
-
-    if (e.key === "ArrowLeft") {
-      previousQuestion();
-    }
-
-  }
-);
-
-
-/* ================= INITIALIZATION ================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  function() {
-
-    /*
-      Untuk demo, user selalu mulai dari
-      loading screen.
-
-      Data soal otomatis dibuat di localStorage.
-    */
-
-    console.log(
-      "EduQuiz berhasil dimuat."
-    );
-
-  }
-);
