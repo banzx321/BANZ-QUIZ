@@ -1,9 +1,19 @@
-/* BANZ QUIZ - Supabase Edition */
+/* =========================================================
+   BANZ QUIZ - SUPABASE EDITION
+   ========================================================= */
 
-const SUPABASE_URL = "https://pvvlyxcyfkqqqoklptqd.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_ZMTwk7G1KQYDzrIvjtWA-A_F8qsw-RJ";
+const SUPABASE_URL =
+  "https://pvvlyxcyfkqqqoklptqd.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_ZMTwk7G1KQYDzrIvjtWA-A_F8qsw-RJ";
 
 let db = null;
+
+
+/* =========================================================
+   HELPER
+   ========================================================= */
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,27 +26,44 @@ const screens = [
   "resultScreen"
 ];
 
+
+/* =========================================================
+   STATE
+   ========================================================= */
+
 let questions = [];
+
 let selectedSubject = "";
+
 let quizQuestions = [];
+
 let currentIndex = 0;
+
 let selectedAnswer = null;
+
 let correctCount = 0;
+
 let timerId = null;
+
 let secondsLeft = 30;
+
 let editingId = null;
 
 
-/* =========================
+/* =========================================================
    SUPABASE
-========================= */
+   ========================================================= */
 
 function initSupabase() {
+
   if (
     !window.supabase ||
     typeof window.supabase.createClient !== "function"
   ) {
-    console.error("Supabase JS belum termuat.");
+
+    console.error(
+      "Supabase JS belum termuat."
+    );
 
     if ($("dbStatus")) {
       $("dbStatus").textContent = "Error";
@@ -50,25 +77,49 @@ function initSupabase() {
     return false;
   }
 
-  db = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
+  try {
 
-  return true;
+    db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    console.log(
+      "Supabase berhasil terhubung."
+    );
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "Gagal membuat koneksi Supabase:",
+      error
+    );
+
+    return false;
+  }
 }
 
 
-/* =========================
+/* =========================================================
    SCREEN
-========================= */
+   ========================================================= */
 
 function showScreen(id) {
-  screens.forEach((x) => {
-    const el = $(x);
-    if (el) {
-      el.classList.toggle("hidden", x !== id);
-    }
+
+  screens.forEach((screenId) => {
+
+    const element =
+      $(screenId);
+
+    if (!element) return;
+
+    element.classList.toggle(
+      "hidden",
+      screenId !== id
+    );
+
   });
 
   window.scrollTo({
@@ -78,44 +129,62 @@ function showScreen(id) {
 }
 
 
-/* =========================
+/* =========================================================
    MESSAGE
-========================= */
+   ========================================================= */
 
-function setMessage(id, text, ok = false) {
-  const el = $(id);
+function setMessage(
+  id,
+  text,
+  success = false
+) {
 
-  if (!el) return;
+  const element =
+    $(id);
 
-  el.textContent = text || "";
-  el.style.color = ok ? "#16803a" : "";
+  if (!element) return;
+
+  element.textContent =
+    text || "";
+
+  element.style.color =
+    success
+      ? "#16803a"
+      : "";
 }
 
 
-/* =========================
-   SECURITY HTML
-========================= */
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
 
 function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[c]));
+
+  return String(
+    value ?? ""
+  ).replace(
+    /[&<>"']/g,
+    (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[character])
+  );
 }
 
 
-/* =========================
+/* =========================================================
    NORMALIZE QUESTION
-========================= */
+   ========================================================= */
 
 function normalizeQuestion(q) {
+
   let answers = q.answers;
 
   /*
-    Supabase bisa mengembalikan:
+    Database sekarang sebaiknya:
 
     [
       "Jawaban A",
@@ -124,35 +193,40 @@ function normalizeQuestion(q) {
       "Jawaban D"
     ]
 
-    atau:
+    Tetapi kode ini juga tetap bisa membaca
+    format object lama:
 
     {
-      A: "Jawaban A",
-      B: "Jawaban B",
-      C: "Jawaban C",
-      D: "Jawaban D"
+      A: "...",
+      B: "...",
+      C: "...",
+      D: "..."
     }
   */
 
   if (Array.isArray(answers)) {
+
     answers = {
       A: answers[0] ?? "",
       B: answers[1] ?? "",
       C: answers[2] ?? "",
       D: answers[3] ?? ""
     };
-  }
 
-  else if (answers && typeof answers === "object") {
+  } else if (
+    answers &&
+    typeof answers === "object"
+  ) {
+
     answers = {
       A: answers.A ?? "",
       B: answers.B ?? "",
       C: answers.C ?? "",
       D: answers.D ?? ""
     };
-  }
 
-  else {
+  } else {
+
     answers = {
       A: "",
       B: "",
@@ -162,26 +236,41 @@ function normalizeQuestion(q) {
   }
 
   return {
+
     id: q.id,
-    subject: q.subject,
-    question: q.question,
-    answers: answers,
-    correct: String(q.correct || "").toUpperCase()
+
+    subject:
+      q.subject || "",
+
+    question:
+      q.question || "",
+
+    answers,
+
+    correct:
+      String(
+        q.correct || ""
+      ).toUpperCase()
+
   };
 }
 
 
-/* =========================
+/* =========================================================
    LOAD QUESTIONS
-========================= */
+   ========================================================= */
 
 async function loadQuestions() {
 
   if (!db) {
-    console.error("Database belum tersedia.");
+
+    console.error(
+      "Database belum tersedia."
+    );
 
     if ($("dbStatus")) {
-      $("dbStatus").textContent = "Error";
+      $("dbStatus").textContent =
+        "Offline";
     }
 
     if ($("publicStatus")) {
@@ -192,78 +281,109 @@ async function loadQuestions() {
     return;
   }
 
-  const {
-    data,
-    error
-  } = await db
-    .from("questions")
-    .select(
-      "id,subject,question,answers,correct,created_at"
-    )
-    .order("created_at", {
-      ascending: true
-    });
+  try {
 
-  if (error) {
+    const {
+      data,
+      error
+    } = await db
+      .from("questions")
+      .select(
+        "id,subject,question,answers,correct,created_at"
+      )
+      .order(
+        "created_at",
+        {
+          ascending: true
+        }
+      );
 
-    console.error("Supabase error:", error);
+    if (error) {
+      throw error;
+    }
+
+    questions =
+      (data || [])
+        .map(normalizeQuestion);
+
+    console.log(
+      `${questions.length} soal berhasil dimuat.`
+    );
 
     if ($("dbStatus")) {
-      $("dbStatus").textContent = "Error";
+      $("dbStatus").textContent =
+        "Online";
+    }
+
+    if ($("publicStatus")) {
+      $("publicStatus").textContent =
+        `${questions.length} soal tersedia online.`;
+    }
+
+    renderSubjects();
+
+    renderAdminQuestions();
+
+    updateStats();
+
+  } catch (error) {
+
+    console.error(
+      "Gagal mengambil soal:",
+      error
+    );
+
+    if ($("dbStatus")) {
+      $("dbStatus").textContent =
+        "Error";
     }
 
     if ($("publicStatus")) {
       $("publicStatus").textContent =
         "Gagal mengambil soal dari database.";
     }
-
-    return;
   }
-
-  questions = (data || []).map(normalizeQuestion);
-
-  if ($("dbStatus")) {
-    $("dbStatus").textContent = "Online";
-  }
-
-  if ($("publicStatus")) {
-    $("publicStatus").textContent =
-      `${questions.length} soal tersedia online.`;
-  }
-
-  renderSubjects();
-  renderAdminQuestions();
-  updateStats();
 }
 
 
-/* =========================
+/* =========================================================
    INIT
-========================= */
+   ========================================================= */
 
 async function init() {
 
-  const bad =
+  const invalidConfig =
+    !SUPABASE_URL ||
+    !SUPABASE_PUBLISHABLE_KEY ||
     SUPABASE_URL.includes("GANTI_") ||
     SUPABASE_PUBLISHABLE_KEY.includes("GANTI_");
 
-  if (bad) {
+  if (invalidConfig) {
+
+    console.error(
+      "Konfigurasi Supabase belum lengkap."
+    );
 
     if ($("publicStatus")) {
       $("publicStatus").textContent =
-        "SUPABASE_URL atau API key belum diisi.";
+        "Konfigurasi Supabase belum lengkap.";
     }
 
     return;
   }
 
-  const connected = initSupabase();
+  const connected =
+    initSupabase();
 
   if (!connected) {
     return;
   }
 
   await loadQuestions();
+
+  /*
+    Cek apakah admin sudah login.
+  */
 
   try {
 
@@ -272,7 +392,11 @@ async function init() {
     } = await db.auth.getSession();
 
     if (data?.session) {
-      openAdmin(data.session.user);
+
+      openAdmin(
+        data.session.user
+      );
+
     }
 
   } catch (error) {
@@ -285,33 +409,40 @@ async function init() {
 }
 
 
-/* =========================
-   STATS
-========================= */
+/* =========================================================
+   STATISTIK
+   ========================================================= */
 
 function updateStats() {
 
   if ($("totalQuestions")) {
-    $("totalQuestions").textContent =
+
+    $("totalQuestions")
+      .textContent =
       questions.length;
   }
 
   if ($("totalSubjects")) {
-    $("totalSubjects").textContent =
+
+    $("totalSubjects")
+      .textContent =
       new Set(
-        questions.map((q) => q.subject)
+        questions.map(
+          (q) => q.subject
+        )
       ).size;
   }
 }
 
 
-/* =========================
+/* =========================================================
    SUBJECT
-========================= */
+   ========================================================= */
 
 function renderSubjects() {
 
-  const list = $("subjectList");
+  const list =
+    $("subjectList");
 
   if (!list) return;
 
@@ -319,8 +450,11 @@ function renderSubjects() {
 
   questions.forEach((q) => {
 
-    grouped[q.subject] =
-      (grouped[q.subject] || 0) + 1;
+    const subject =
+      q.subject || "Tanpa Mata Pelajaran";
+
+    grouped[subject] =
+      (grouped[subject] || 0) + 1;
 
   });
 
@@ -330,42 +464,51 @@ function renderSubjects() {
   if (!entries.length) {
 
     list.innerHTML =
-      `<div class="muted">Belum ada soal.</div>`;
+      `<div class="muted">
+        Belum ada soal.
+      </div>`;
 
     return;
   }
 
   list.innerHTML =
-    entries.map(
-      ([subject, count]) => `
-        <button
-          class="subject-btn"
-          data-subject="${escapeHtml(subject)}"
-        >
-          📘 ${escapeHtml(subject)}
-          <span>${count} soal</span>
-        </button>
-      `
-    ).join("");
+    entries
+      .map(
+        ([subject, count]) => `
+          <button
+            type="button"
+            class="subject-btn"
+            data-subject="${escapeHtml(subject)}"
+          >
+            📘 ${escapeHtml(subject)}
+            <span>${count} soal</span>
+          </button>
+        `
+      )
+      .join("");
 
   list
     .querySelectorAll(".subject-btn")
-    .forEach((btn) => {
+    .forEach((button) => {
 
-      btn.addEventListener(
+      button.addEventListener(
         "click",
-        () => startQuiz(
-          btn.dataset.subject
-        )
+        () => {
+
+          startQuiz(
+            button.dataset.subject
+          );
+
+        }
       );
 
     });
 }
 
 
-/* =========================
-   ADMIN QUESTIONS
-========================= */
+/* =========================================================
+   ADMIN QUESTION LIST
+   ========================================================= */
 
 function renderAdminQuestions() {
 
@@ -375,106 +518,129 @@ function renderAdminQuestions() {
   if (!list) return;
 
   const search =
-    $("adminSearch")?.value
+    $("adminSearch")
+      ?.value
       .toLowerCase()
       .trim() || "";
 
   const filtered =
-    questions.filter((q) =>
-      `${q.subject} ${q.question}`
-        .toLowerCase()
-        .includes(search)
-    );
+    questions.filter((q) => {
+
+      const text =
+        `${q.subject} ${q.question}`
+          .toLowerCase();
+
+      return text.includes(search);
+
+    });
 
   if (!filtered.length) {
 
     list.innerHTML =
-      `<div class="muted">Tidak ada soal.</div>`;
+      `<div class="muted">
+        Tidak ada soal.
+      </div>`;
 
     return;
   }
 
   list.innerHTML =
-    filtered.map(
-      (q) => `
-        <div class="question-item">
+    filtered
+      .map(
+        (q) => `
+          <div class="question-item">
 
-          <div>
+            <div>
 
-            <h3>
-              ${escapeHtml(q.question)}
-            </h3>
+              <h3>
+                ${escapeHtml(q.question)}
+              </h3>
 
-            <p>
-              ${escapeHtml(q.subject)}
-              • Jawaban benar:
-              ${escapeHtml(q.correct)}
-            </p>
+              <p>
+                ${escapeHtml(q.subject)}
+                • Jawaban benar:
+                ${escapeHtml(q.correct)}
+              </p>
+
+            </div>
+
+            <div class="item-actions">
+
+              <button
+                type="button"
+                class="btn secondary small edit-btn"
+                data-id="${q.id}"
+              >
+                Edit
+              </button>
+
+              <button
+                type="button"
+                class="btn danger small delete-btn"
+                data-id="${q.id}"
+              >
+                Hapus
+              </button>
+
+            </div>
 
           </div>
-
-          <div class="item-actions">
-
-            <button
-              class="btn secondary small edit-btn"
-              data-id="${q.id}"
-            >
-              Edit
-            </button>
-
-            <button
-              class="btn danger small delete-btn"
-              data-id="${q.id}"
-            >
-              Hapus
-            </button>
-
-          </div>
-
-        </div>
-      `
-    ).join("");
+        `
+      )
+      .join("");
 
   list
     .querySelectorAll(".edit-btn")
-    .forEach((btn) => {
+    .forEach((button) => {
 
-      btn.addEventListener(
+      button.addEventListener(
         "click",
-        () => openEdit(
-          btn.dataset.id
-        )
+        () => {
+
+          openEdit(
+            button.dataset.id
+          );
+
+        }
       );
 
     });
 
   list
     .querySelectorAll(".delete-btn")
-    .forEach((btn) => {
+    .forEach((button) => {
 
-      btn.addEventListener(
+      button.addEventListener(
         "click",
-        () => deleteQuestion(
-          btn.dataset.id
-        )
+        () => {
+
+          deleteQuestion(
+            button.dataset.id
+          );
+
+        }
       );
 
     });
 }
 
 
-/* =========================
+/* =========================================================
    ADMIN LOGIN
-========================= */
+   ========================================================= */
 
 function openAdmin(user) {
 
   if ($("adminEmailLabel")) {
-    $("adminEmailLabel").textContent =
-      user.email || "";
+
+    $("adminEmailLabel")
+      .textContent =
+      user?.email || "";
   }
 
-  showScreen("adminScreen");
+  showScreen(
+    "adminScreen"
+  );
 }
 
 
@@ -484,6 +650,7 @@ async function adminLogin(
 ) {
 
   if (!db) {
+
     setMessage(
       "loginMessage",
       "Database belum terhubung."
@@ -492,15 +659,31 @@ async function adminLogin(
     return;
   }
 
+  if (!email || !password) {
+
+    setMessage(
+      "loginMessage",
+      "Email dan password wajib diisi."
+    );
+
+    return;
+  }
+
   const {
     data,
     error
-  } = await db.auth.signInWithPassword({
-    email,
-    password
-  });
+  } =
+    await db.auth.signInWithPassword({
+      email,
+      password
+    });
 
   if (error) {
+
+    console.error(
+      "Login error:",
+      error
+    );
 
     setMessage(
       "loginMessage",
@@ -516,118 +699,184 @@ async function adminLogin(
     true
   );
 
-  openAdmin(data.user);
+  openAdmin(
+    data.user
+  );
 }
 
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
 
 async function logout() {
 
+  clearInterval(
+    timerId
+  );
+
   if (db) {
-    await db.auth.signOut();
+
+    try {
+
+      await db.auth.signOut();
+
+    } catch (error) {
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
+    }
   }
 
-  showScreen("homeScreen");
+  showScreen(
+    "homeScreen"
+  );
 }
 
 
-/* =========================
+/* =========================================================
    ADD QUESTION
-========================= */
+   ========================================================= */
 
 function openAdd() {
 
   editingId = null;
 
-  $("modalTitle").textContent =
-    "Tambah Soal";
+  if ($("modalTitle")) {
+    $("modalTitle").textContent =
+      "Tambah Soal";
+  }
 
-  $("questionForm").reset();
+  if ($("questionForm")) {
+    $("questionForm").reset();
+  }
 
-  $("questionId").value = "";
+  if ($("questionId")) {
+    $("questionId").value = "";
+  }
 
   setMessage(
     "formMessage",
     ""
   );
 
-  $("questionModal")
-    .classList
-    .remove("hidden");
+  if ($("questionModal")) {
+
+    $("questionModal")
+      .classList
+      .remove("hidden");
+
+  }
 }
 
 
-/* =========================
+/* =========================================================
    EDIT QUESTION
-========================= */
+   ========================================================= */
 
 function openEdit(id) {
 
-  const q =
+  const question =
     questions.find(
-      (x) =>
-        String(x.id) ===
+      (q) =>
+        String(q.id) ===
         String(id)
     );
 
-  if (!q) return;
+  if (!question) return;
 
-  editingId = q.id;
+  editingId =
+    question.id;
 
-  $("modalTitle").textContent =
-    "Edit Soal";
+  if ($("modalTitle")) {
+    $("modalTitle").textContent =
+      "Edit Soal";
+  }
 
-  $("questionId").value =
-    q.id;
+  if ($("questionId")) {
+    $("questionId").value =
+      question.id;
+  }
 
-  $("subject").value =
-    q.subject;
+  if ($("subject")) {
+    $("subject").value =
+      question.subject;
+  }
 
-  $("question").value =
-    q.question;
+  if ($("question")) {
+    $("question").value =
+      question.question;
+  }
 
-  $("answerA").value =
-    q.answers.A;
+  if ($("answerA")) {
+    $("answerA").value =
+      question.answers.A;
+  }
 
-  $("answerB").value =
-    q.answers.B;
+  if ($("answerB")) {
+    $("answerB").value =
+      question.answers.B;
+  }
 
-  $("answerC").value =
-    q.answers.C;
+  if ($("answerC")) {
+    $("answerC").value =
+      question.answers.C;
+  }
 
-  $("answerD").value =
-    q.answers.D;
+  if ($("answerD")) {
+    $("answerD").value =
+      question.answers.D;
+  }
 
-  $("correct").value =
-    q.correct;
+  if ($("correct")) {
+    $("correct").value =
+      question.correct;
+  }
 
   setMessage(
     "formMessage",
     ""
   );
 
-  $("questionModal")
-    .classList
-    .remove("hidden");
+  if ($("questionModal")) {
+
+    $("questionModal")
+      .classList
+      .remove("hidden");
+
+  }
 }
 
+
+/* =========================================================
+   CLOSE MODAL
+   ========================================================= */
 
 function closeModal() {
 
-  $("questionModal")
-    .classList
-    .add("hidden");
+  if ($("questionModal")) {
+
+    $("questionModal")
+      .classList
+      .add("hidden");
+
+  }
 }
 
 
-/* =========================
+/* =========================================================
    SAVE QUESTION
-========================= */
+   ========================================================= */
 
-async function saveQuestion(e) {
+async function saveQuestion(event) {
 
-  e.preventDefault();
+  event.preventDefault();
 
   if (!db) {
+
     setMessage(
       "formMessage",
       "Database belum terhubung."
@@ -635,102 +884,157 @@ async function saveQuestion(e) {
 
     return;
   }
+
+  const subject =
+    $("subject")
+      ?.value
+      .trim() || "";
+
+  const question =
+    $("question")
+      ?.value
+      .trim() || "";
+
+  const answerA =
+    $("answerA")
+      ?.value
+      .trim() || "";
+
+  const answerB =
+    $("answerB")
+      ?.value
+      .trim() || "";
+
+  const answerC =
+    $("answerC")
+      ?.value
+      .trim() || "";
+
+  const answerD =
+    $("answerD")
+      ?.value
+      .trim() || "";
+
+  const correct =
+    $("correct")
+      ?.value
+      .toUpperCase() || "";
+
+  if (
+    !subject ||
+    !question ||
+    !answerA ||
+    !answerB ||
+    !answerC ||
+    !answerD ||
+    !["A", "B", "C", "D"].includes(correct)
+  ) {
+
+    setMessage(
+      "formMessage",
+      "Lengkapi semua data soal dan pilih jawaban benar A/B/C/D."
+    );
+
+    return;
+  }
+
+
+  /*
+    PENTING:
+
+    answers disimpan sebagai ARRAY
+    agar sesuai dengan data soal
+    yang sudah ada di Supabase.
+  */
 
   const payload = {
 
-    subject:
-      $("subject")
-        .value
-        .trim(),
+    subject,
 
-    question:
-      $("question")
-        .value
-        .trim(),
+    question,
 
-    answers: {
+    answers: [
+      answerA,
+      answerB,
+      answerC,
+      answerD
+    ],
 
-      A:
-        $("answerA")
-          .value
-          .trim(),
-
-      B:
-        $("answerB")
-          .value
-          .trim(),
-
-      C:
-        $("answerC")
-          .value
-          .trim(),
-
-      D:
-        $("answerD")
-          .value
-          .trim()
-
-    },
-
-    correct:
-      $("correct").value
+    correct
 
   };
 
-  let error;
 
-  if (editingId) {
+  try {
 
-    ({
+    let error = null;
+
+    if (editingId) {
+
+      const result =
+        await db
+          .from("questions")
+          .update(payload)
+          .eq(
+            "id",
+            editingId
+          );
+
+      error =
+        result.error;
+
+    } else {
+
+      const result =
+        await db
+          .from("questions")
+          .insert(payload);
+
+      error =
+        result.error;
+    }
+
+    if (error) {
+      throw error;
+    }
+
+    closeModal();
+
+    await loadQuestions();
+
+  } catch (error) {
+
+    console.error(
+      "Gagal menyimpan soal:",
       error
-    } = await db
-      .from("questions")
-      .update(payload)
-      .eq("id", editingId));
-
-  } else {
-
-    ({
-      error
-    } = await db
-      .from("questions")
-      .insert(payload));
-
-  }
-
-  if (error) {
-
-    console.error(error);
+    );
 
     setMessage(
       "formMessage",
-      error.message
+      error.message ||
+      "Gagal menyimpan soal."
     );
-
-    return;
   }
-
-  closeModal();
-
-  await loadQuestions();
 }
 
 
-/* =========================
-   DELETE
-========================= */
+/* =========================================================
+   DELETE QUESTION
+   ========================================================= */
 
 async function deleteQuestion(id) {
 
-  if (
-    !confirm(
+  const confirmed =
+    confirm(
       "Hapus soal ini?"
-    )
-  ) {
+    );
+
+  if (!confirmed) {
     return;
   }
 
   if (!db) {
+
     alert(
       "Database belum terhubung."
     );
@@ -738,29 +1042,43 @@ async function deleteQuestion(id) {
     return;
   }
 
-  const {
-    error
-  } = await db
-    .from("questions")
-    .delete()
-    .eq("id", id);
+  try {
 
-  if (error) {
+    const {
+      error
+    } =
+      await db
+        .from("questions")
+        .delete()
+        .eq(
+          "id",
+          id
+        );
 
-    alert(
-      error.message
+    if (error) {
+      throw error;
+    }
+
+    await loadQuestions();
+
+  } catch (error) {
+
+    console.error(
+      "Gagal menghapus soal:",
+      error
     );
 
-    return;
+    alert(
+      error.message ||
+      "Gagal menghapus soal."
+    );
   }
-
-  await loadQuestions();
 }
 
 
-/* =========================
+/* =========================================================
    START QUIZ
-========================= */
+   ========================================================= */
 
 function startQuiz(subject) {
 
@@ -781,7 +1099,7 @@ function startQuiz(subject) {
   if (!quizQuestions.length) {
 
     alert(
-      "Belum ada soal."
+      "Belum ada soal untuk mata pelajaran ini."
     );
 
     return;
@@ -791,6 +1109,8 @@ function startQuiz(subject) {
 
   correctCount = 0;
 
+  selectedAnswer = null;
+
   showScreen(
     "quizScreen"
   );
@@ -799,9 +1119,9 @@ function startQuiz(subject) {
 }
 
 
-/* =========================
+/* =========================================================
    RENDER QUIZ
-========================= */
+   ========================================================= */
 
 function renderQuizQuestion() {
 
@@ -809,104 +1129,153 @@ function renderQuizQuestion() {
     timerId
   );
 
-  const q =
+  const question =
     quizQuestions[
       currentIndex
     ];
 
+  if (!question) {
+    finishQuiz();
+    return;
+  }
+
   selectedAnswer = null;
 
-  $("quizSubject")
-    .textContent =
-    q.subject;
+  if ($("quizSubject")) {
 
-  $("quizProgress")
-    .textContent =
-    `Soal ${
-      currentIndex + 1
-    } / ${
-      quizQuestions.length
-    }`;
+    $("quizSubject")
+      .textContent =
+      question.subject;
 
-  $("quizQuestion")
-    .textContent =
-    q.question;
+  }
 
-  $("answerList")
-    .innerHTML =
-    Object.entries(
-      q.answers
-    )
-    .map(
-      ([letter, text]) => `
-        <button
-          class="answer"
-          data-answer="${letter}"
-        >
-          <b>${letter}</b>
-          ${escapeHtml(text)}
-        </button>
-      `
-    )
-    .join("");
+  if ($("quizProgress")) {
 
-  $("nextQuestionBtn")
-    .disabled = true;
+    $("quizProgress")
+      .textContent =
+      `Soal ${
+        currentIndex + 1
+      } / ${
+        quizQuestions.length
+      }`;
 
-  $("nextQuestionBtn")
-    .textContent =
+  }
+
+  if ($("quizQuestion")) {
+
+    $("quizQuestion")
+      .textContent =
+      question.question;
+
+  }
+
+
+  if ($("answerList")) {
+
+    $("answerList")
+      .innerHTML =
+      Object.entries(
+        question.answers
+      )
+      .map(
+        ([letter, text]) => `
+          <button
+            type="button"
+            class="answer"
+            data-answer="${letter}"
+          >
+            <b>${letter}</b>
+            ${escapeHtml(text)}
+          </button>
+        `
+      )
+      .join("");
+
+
+    $("answerList")
+      .querySelectorAll(
+        ".answer"
+      )
+      .forEach((button) => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            selectedAnswer =
+              button.dataset.answer;
+
+            $("answerList")
+              .querySelectorAll(
+                ".answer"
+              )
+              .forEach(
+                (item) =>
+                  item.classList.remove(
+                    "selected"
+                  )
+              );
+
+            button.classList.add(
+              "selected"
+            );
+
+            if ($("nextQuestionBtn")) {
+
+              $("nextQuestionBtn")
+                .disabled = false;
+
+            }
+
+          }
+        );
+
+      });
+
+  }
+
+
+  if ($("nextQuestionBtn")) {
+
+    $("nextQuestionBtn")
+      .disabled = true;
+
+    $("nextQuestionBtn")
+      .textContent =
       currentIndex ===
       quizQuestions.length - 1
         ? "Selesai"
         : "Jawab & Lanjut";
+  }
 
-  $("answerList")
-    .querySelectorAll(".answer")
-    .forEach((btn) => {
 
-      btn.addEventListener(
-        "click",
-        () => {
-
-          selectedAnswer =
-            btn.dataset.answer;
-
-          $("answerList")
-            .querySelectorAll(
-              ".answer"
-            )
-            .forEach(
-              (x) =>
-                x.classList.remove(
-                  "selected"
-                )
-            );
-
-          btn.classList.add(
-            "selected"
-          );
-
-          $("nextQuestionBtn")
-            .disabled = false;
-        }
-      );
-
-    });
+  /*
+    TIMER 30 DETIK
+  */
 
   secondsLeft = 30;
 
-  $("timer")
-    .textContent =
-    secondsLeft;
+  if ($("timer")) {
+
+    $("timer")
+      .textContent =
+      secondsLeft;
+
+  }
+
 
   timerId =
     setInterval(() => {
 
       secondsLeft--;
 
-      $("timer")
-        .textContent =
-        secondsLeft;
+      if ($("timer")) {
+
+        $("timer")
+          .textContent =
+          secondsLeft;
+
+      }
 
       if (
         secondsLeft <= 0
@@ -917,15 +1286,16 @@ function renderQuizQuestion() {
         );
 
         nextQuestion();
+
       }
 
     }, 1000);
 }
 
 
-/* =========================
+/* =========================================================
    NEXT QUESTION
-========================= */
+   ========================================================= */
 
 function nextQuestion() {
 
@@ -933,16 +1303,23 @@ function nextQuestion() {
     timerId
   );
 
-  const q =
+  const question =
     quizQuestions[
       currentIndex
     ];
 
+  if (!question) {
+    return;
+  }
+
   if (
+    selectedAnswer &&
     selectedAnswer ===
-    q.correct
+    question.correct
   ) {
+
     correctCount++;
+
   }
 
   currentIndex++;
@@ -962,33 +1339,54 @@ function nextQuestion() {
 }
 
 
-/* =========================
-   RESULT
-========================= */
+/* =========================================================
+   FINISH QUIZ
+   ========================================================= */
 
 function finishQuiz() {
+
+  clearInterval(
+    timerId
+  );
 
   const total =
     quizQuestions.length;
 
+  if (!total) {
+    return;
+  }
+
   const percent =
     Math.round(
-      (correctCount /
-        total) *
-        100
+      (
+        correctCount /
+        total
+      ) * 100
     );
 
-  $("resultSubject")
-    .textContent =
-    selectedSubject;
+  if ($("resultSubject")) {
 
-  $("resultScore")
-    .textContent =
-    `${percent}%`;
+    $("resultSubject")
+      .textContent =
+      selectedSubject;
 
-  $("resultDetail")
-    .textContent =
-    `${correctCount} benar dari ${total} soal.`;
+  }
+
+  if ($("resultScore")) {
+
+    $("resultScore")
+      .textContent =
+      `${percent}%`;
+
+  }
+
+  if ($("resultDetail")) {
+
+    $("resultDetail")
+      .textContent =
+      `${correctCount} benar dari ${total} soal.`;
+
+  }
 
   showScreen(
     "resultScreen"
@@ -996,22 +1394,34 @@ function finishQuiz() {
 }
 
 
+/* =========================================================
+   RETRY QUIZ
+   ========================================================= */
+
 function retryQuiz() {
 
   startQuiz(
     selectedSubject
   );
-
 }
 
 
-/* =========================
-   LOADING
-========================= */
+/* =========================================================
+   DOM READY
+   ========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
   () => {
+
+    console.log(
+      "BANZ QUIZ siap."
+    );
+
+
+    /* =====================================================
+       LOADING
+       ===================================================== */
 
     const finishLoading =
       () => {
@@ -1023,24 +1433,23 @@ document.addEventListener(
           $("app");
 
         if (loading) {
+
           loading.classList.add(
             "hidden"
           );
+
         }
 
         if (app) {
+
           app.classList.remove(
             "hidden"
           );
+
         }
 
       };
 
-
-    /*
-      Loading tidak boleh
-      menahan website selamanya.
-    */
 
     const loadingTimer =
       setTimeout(
@@ -1085,6 +1494,10 @@ document.addEventListener(
     }
 
 
+    /* =====================================================
+       HOME
+       ===================================================== */
+
     if ($("studentBtn")) {
 
       $("studentBtn")
@@ -1109,31 +1522,10 @@ document.addEventListener(
       $("adminBtn")
         .addEventListener(
           "click",
-          () =>
+          () => {
+
             showScreen(
               "adminLoginScreen"
-            )
-        );
-
-    }
-
-
-    if ($("adminLoginForm")) {
-
-      $("adminLoginForm")
-        .addEventListener(
-          "submit",
-          (e) => {
-
-            e.preventDefault();
-
-            adminLogin(
-              $("adminEmail")
-                .value
-                .trim(),
-
-              $("adminPassword")
-                .value
             );
 
           }
@@ -1141,6 +1533,43 @@ document.addEventListener(
 
     }
 
+
+    /* =====================================================
+       ADMIN LOGIN
+       ===================================================== */
+
+    if ($("adminLoginForm")) {
+
+      $("adminLoginForm")
+        .addEventListener(
+          "submit",
+          (event) => {
+
+            event.preventDefault();
+
+            const email =
+              $("adminEmail")
+                ?.value
+                .trim() || "";
+
+            const password =
+              $("adminPassword")
+                ?.value || "";
+
+            adminLogin(
+              email,
+              password
+            );
+
+          }
+        );
+
+    }
+
+
+    /* =====================================================
+       ADMIN
+       ===================================================== */
 
     if ($("logoutBtn")) {
 
@@ -1164,82 +1593,149 @@ document.addEventListener(
     }
 
 
-        if ($("closeModal")) {
-      $("closeModal").addEventListener(
-        "click",
-        closeModal
-      );
+    if ($("closeModal")) {
+
+      $("closeModal")
+        .addEventListener(
+          "click",
+          closeModal
+        );
+
     }
+
 
     if ($("questionForm")) {
-      $("questionForm").addEventListener(
-        "submit",
-        saveQuestion
-      );
+
+      $("questionForm")
+        .addEventListener(
+          "submit",
+          saveQuestion
+        );
+
     }
+
 
     if ($("adminSearch")) {
-      $("adminSearch").addEventListener(
-        "input",
-        renderAdminQuestions
-      );
+
+      $("adminSearch")
+        .addEventListener(
+          "input",
+          renderAdminQuestions
+        );
+
     }
+
+
+    /* =====================================================
+       QUIZ
+       ===================================================== */
 
     if ($("nextQuestionBtn")) {
-      $("nextQuestionBtn").addEventListener(
-        "click",
-        nextQuestion
-      );
+
+      $("nextQuestionBtn")
+        .addEventListener(
+          "click",
+          nextQuestion
+        );
+
     }
+
 
     if ($("quitQuizBtn")) {
-      $("quitQuizBtn").addEventListener(
-        "click",
-        () => {
-          clearInterval(timerId);
-          showScreen("studentScreen");
-        }
-      );
-    }
 
-    if ($("retryBtn")) {
-      $("retryBtn").addEventListener(
-        "click",
-        retryQuiz
-      );
-    }
-
-    if ($("resultHomeBtn")) {
-      $("resultHomeBtn").addEventListener(
-        "click",
-        () => {
-          clearInterval(timerId);
-          showScreen("homeScreen");
-        }
-      );
-    }
-
-    document
-      .querySelectorAll("[data-back]")
-      .forEach((btn) => {
-        btn.addEventListener(
+      $("quitQuizBtn")
+        .addEventListener(
           "click",
           () => {
-            const target = btn.dataset.back;
 
-            if (target) {
-              showScreen(target);
-            }
+            clearInterval(
+              timerId
+            );
+
+            showScreen(
+              "studentScreen"
+            );
+
           }
         );
-      });
 
-    /*
-      Jalankan koneksi Supabase
-      setelah semua tombol selesai dipasang.
-    */
+    }
+
+
+    /* =====================================================
+       RESULT
+       ===================================================== */
+
+    if ($("retryBtn")) {
+
+      $("retryBtn")
+        .addEventListener(
+          "click",
+          retryQuiz
+        );
+
+    }
+
+
+    if ($("resultHomeBtn")) {
+
+      $("resultHomeBtn")
+        .addEventListener(
+          "click",
+          () => {
+
+            clearInterval(
+              timerId
+            );
+
+            showScreen(
+              "homeScreen"
+            );
+
+          }
+        );
+
+    }
+
+
+    /* =====================================================
+       BACK BUTTON
+       ===================================================== */
+
+    document
+      .querySelectorAll(
+        "[data-back]"
+      )
+      .forEach(
+        (button) => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              const target =
+                button.dataset.back;
+
+              if (target) {
+
+                showScreen(
+                  target
+                );
+
+              }
+
+            }
+          );
+
+        }
+      );
+
+
+    /* =====================================================
+       SUPABASE
+       ===================================================== */
+
     init();
 
   }
 );
-         
