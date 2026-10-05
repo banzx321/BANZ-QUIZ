@@ -1164,9 +1164,82 @@ document.addEventListener(
     }
 
 
-    if ($("closeModal")) {
+        if ($("closeModal")) {
+      $("closeModal").addEventListener(
+        "click",
+        closeModal
+      );
+    }
 
-      $("closeModal")
-        .addEventListener(
+    if ($("questionForm")) {
+      $("questionForm").addEventListener(
+        "submit",
+        saveQuestion
+      );
+    }
+
+    if ($("adminSearch")) {
+      $("adminSearch").addEventListener(
+        "input",
+        renderAdminQuestions
+      );
+    }
+
+    if ($("nextQuestionBtn")) {
+      $("nextQuestionBtn").addEventListener(
+        "click",
+        nextQuestion
+      );
+    }
+
+    if ($("quitQuizBtn")) {
+      $("quitQuizBtn").addEventListener(
+        "click",
+        () => {
+          clearInterval(timerId);
+          showScreen("studentScreen");
+        }
+      );
+    }
+
+    if ($("retryBtn")) {
+      $("retryBtn").addEventListener(
+        "click",
+        retryQuiz
+      );
+    }
+
+    if ($("resultHomeBtn")) {
+      $("resultHomeBtn").addEventListener(
+        "click",
+        () => {
+          clearInterval(timerId);
+          showScreen("homeScreen");
+        }
+      );
+    }
+
+    document
+      .querySelectorAll("[data-back]")
+      .forEach((btn) => {
+        btn.addEventListener(
           "click",
+          () => {
+            const target = btn.dataset.back;
+
+            if (target) {
+              showScreen(target);
+            }
+          }
+        );
+      });
+
+    /*
+      Jalankan koneksi Supabase
+      setelah semua tombol selesai dipasang.
+    */
+    init();
+
+  }
+);
          
