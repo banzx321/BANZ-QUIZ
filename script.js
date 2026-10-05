@@ -23,13 +23,13 @@ import {
 // =====================================================
 
 const firebaseConfig = {
-  apiKey: "MASUKKAN_API_KEY",
-  authDomain: "PROJECT-ID.firebaseapp.com",
-  databaseURL: "https://PROJECT-ID-default-rtdb.firebaseio.com",
-  projectId: "PROJECT-ID",
-  storageBucket: "PROJECT-ID.appspot.com",
-  messagingSenderId: "MESSAGING-SENDER-ID",
-  appId: "APP-ID"
+  apiKey: "AIza...",
+  authDomain: "banz-quiz.firebaseapp.com",
+  databaseURL: "https://banz-quiz-default-rtdb.firebaseio.com",
+  projectId: "banz-quiz",
+  storageBucket: "banz-quiz.firebasestorage.app",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef"
 };
 
 
@@ -348,7 +348,7 @@ async function tambahSoalIPS() {
 // =====================================================
 
 const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "GANTI_PASSWORD_ADMIN";
+const ADMIN_PASSWORD = "admin123";
 
 
 function loginAdmin(username, password) {
