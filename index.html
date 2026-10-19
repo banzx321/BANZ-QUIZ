@@ -176,6 +176,72 @@
 
         </div>
 
+        
+<section class="results-dashboard" id="resultsDashboard">
+  <h2>📊 Hasil Ujian Siswa</h2>
+  <p>Rekap nilai seluruh siswa yang telah menyelesaikan kuis.</p>
+
+  <div class="results-stats">
+    <div class="result-stat">
+      <span>Total pengerjaan</span>
+      <strong id="totalAttempts">0</strong>
+    </div>
+
+    <div class="result-stat">
+      <span>Peserta unik</span>
+      <strong id="totalStudents">0</strong>
+    </div>
+
+    <div class="result-stat">
+      <span>Rata-rata nilai</span>
+      <strong id="averageScore">0</strong>
+    </div>
+
+    <div class="result-stat">
+      <span>Nilai tertinggi</span>
+      <strong id="highestScore">0</strong>
+    </div>
+  </div>
+
+  <div class="results-toolbar">
+    <input
+      type="search"
+      id="resultSearch"
+      placeholder="Cari nama siswa atau mata pelajaran..."
+      oninput="filterQuizResults()"
+    >
+
+    <button
+      type="button"
+      class="results-refresh"
+      onclick="loadAdminResults()"
+    >
+      ↻ Muat ulang
+    </button>
+  </div>
+
+  <div id="resultsMessage" class="results-message">
+    Tekan Muat ulang untuk mengambil hasil ujian.
+  </div>
+
+  <div class="results-table-wrap">
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>No.</th>
+          <th>Nama siswa</th>
+          <th>Mata pelajaran</th>
+          <th>Benar</th>
+          <th>Salah</th>
+          <th>Nilai</th>
+          <th>Waktu</th>
+        </tr>
+      </thead>
+      <tbody id="quizResultsBody"></tbody>
+    </table>
+  </div>
+</section>
+
 
         <div class="admin-actions">
 
