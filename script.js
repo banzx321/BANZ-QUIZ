@@ -106,6 +106,224 @@ function initSupabase() {
    SCREEN
    ========================================================= */
 
+/* ==========================================
+   BANZ QUIZ - SISTEM HASIL UJIAN
+   ========================================== */
+
+let quizResultsCache = [];
+let resultSaveInProgress = false;
+let lastSavedQuizKey = null;
+
+// Simpan hasil ujian ke database online
+async function saveQuizResult() {
+  if (resultSaveInProgress) return;
+
+  const studentName = document
+    .getElementById("studentName")
+    ?.value.trim();
+
+  if (!studentName) {
+    alert("Nama siswa belum diisi.");
+    return;
+  }
+
+  if (!db) {
+    alert("Database belum terhubung. Periksa koneksi Supabase.");
+    return;
+  }
+
+  const total = quizQuestions.length;
+
+  if (!total) {
+    alert("Tidak ada soal yang dapat dinilai.");
+    return;
+  }
+
+  const correct = Number(correctCount) || 0;
+  const wrong = total - correct;
+  const score = Math.round((correct / total) * 10000) / 100;
+
+  // Mencegah penyimpanan ganda pada penyelesaian yang sama
+  const quizKey = [
+    studentName,
+    selectedSubject,
+    total,
+    Date.now()
+  ].join("-");
+
+  if (lastSavedQuizKey === quizKey) return;
+
+  resultSaveInProgress = true;
+
+  try {
+    const { data, error } = await db
+      .from("quiz_results")
+      .insert([{
+        student_name: studentName,
+        subject: selectedSubject,
+        total_questions: total,
+        correct_count: correct,
+        wrong_count: wrong,
+        score: score
+      }])
+      .select();
+
+    if (error) throw error;
+
+    lastSavedQuizKey = quizKey;
+
+    console.log("Hasil ujian berhasil disimpan:", data);
+
+    const detail = document.getElementById("resultDetail");
+
+    if (detail) {
+      detail.insertAdjacentHTML(
+        "beforeend",
+        '<p class="result-save-status">' +
+          "✓ Hasil ujian berhasil disimpan secara online." +
+        "</p>"
+      );
+    }
+  } catch (error) {
+    console.error("Gagal menyimpan hasil ujian:", error);
+
+    alert(
+      "Hasil belum berhasil disimpan ke database. " +
+      "Silakan hubungi admin atau coba lagi."
+    );
+  } finally {
+    resultSaveInProgress = false;
+  }
+}
+
+
+// Mengambil seluruh hasil ujian untuk dashboard admin
+async function loadAdminResults() {
+  const message = document.getElementById("resultsMessage");
+  const tbody = document.getElementById("quizResultsBody");
+
+  if (!db) {
+    if (message) {
+      message.textContent = "Database Supabase belum terhubung.";
+    }
+    return;
+  }
+
+  if (message) message.textContent = "Memuat hasil ujian...";
+  if (tbody) tbody.innerHTML = "";
+
+  try {
+    const { data, error } = await db
+      .from("quiz_results")
+      .select(
+        "id,student_name,subject,total_questions," +
+        "correct_count,wrong_count,score,created_at"
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    quizResultsCache = data || [];
+
+    renderQuizResults(quizResultsCache);
+  } catch (error) {
+    console.error("Gagal mengambil hasil ujian:", error);
+
+    if (message) {
+      message.textContent =
+        "Gagal memuat hasil. Pastikan admin sudah login " +
+        "dan kebijakan akses Supabase sudah benar.";
+    }
+  }
+}
+
+
+// Menggambar statistik dan tabel hasil
+function renderQuizResults(results) {
+  const tbody = document.getElementById("quizResultsBody");
+  const message = document.getElementById("resultsMessage");
+
+  if (!tbody) return;
+
+  const attempts = results.length;
+  const uniqueStudents = new Set(
+    results.map(r => r.student_name.trim().toLowerCase())
+  ).size;
+
+  const average = attempts
+    ? results.reduce((sum, r) => sum + Number(r.score), 0) / attempts
+    : 0;
+
+  const highest = attempts
+    ? Math.max(...results.map(r => Number(r.score)))
+    : 0;
+
+  document.getElementById("totalAttempts").textContent = attempts;
+  document.getElementById("totalStudents").textContent = uniqueStudents;
+  document.getElementById("averageScore").textContent =
+    average.toFixed(2);
+  document.getElementById("highestScore").textContent =
+    highest.toFixed(2);
+
+  tbody.innerHTML = "";
+
+  if (message) {
+    message.textContent = attempts
+      ? "Menampilkan " + attempts + " hasil pengerjaan."
+      : "Belum ada hasil ujian yang tersimpan.";
+  }
+
+  results.forEach((result, index) => {
+    const tr = document.createElement("tr");
+
+    const date = result.created_at
+      ? new Date(result.created_at).toLocaleString("id-ID", {
+          dateStyle: "short",
+          timeStyle: "short"
+        })
+      : "-";
+
+    const values = [
+      index + 1,
+      result.student_name,
+      result.subject,
+      result.correct_count + "/" + result.total_questions,
+      result.wrong_count,
+      Number(result.score).toFixed(2),
+      date
+    ];
+
+    values.forEach((value, columnIndex) => {
+      const td = document.createElement("td");
+      td.textContent = value;
+
+      if (columnIndex === 5) {
+        td.className = "result-score";
+      }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+
+// Pencarian nama siswa atau mata pelajaran
+function filterQuizResults() {
+  const query = (
+    document.getElementById("resultSearch")?.value || ""
+  ).trim().toLowerCase();
+
+  const filtered = quizResultsCache.filter(result =>
+    result.student_name.toLowerCase().includes(query) ||
+    result.subject.toLowerCase().includes(query)
+  );
+
+  renderQuizResults(filtered);
+}
+
+
 function showScreen(id) {
 
   screens.forEach((screenId) => {
