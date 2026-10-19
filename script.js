@@ -1253,7 +1253,7 @@ function renderQuizQuestion() {
     TIMER 30 DETIK
   */
 
-  secondsLeft = 30;
+  secondsLeft = 120;
 
   if ($("timer")) {
 
